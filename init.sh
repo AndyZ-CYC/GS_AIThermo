@@ -22,7 +22,7 @@ cd "$SCRIPT_DIR"
 echo -e "${YELLOW}当前工作目录: $SCRIPT_DIR${NC}"
 
 # 检查 Node.js
-echo -e "\n${YELLOW}[1/5] 检查 Node.js 环境...${NC}"
+echo -e "\n${YELLOW}[1/6] 检查 Node.js 环境...${NC}"
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node -v)
     echo -e "${GREEN}✓ Node.js 已安装: $NODE_VERSION${NC}"
@@ -31,63 +31,65 @@ else
     exit 1
 fi
 
-# 检查包管理器
-echo -e "\n${YELLOW}[2/5] 检查包管理器...${NC}"
-if command -v pnpm &> /dev/null; then
-    PKG_MANAGER="pnpm"
-    echo -e "${GREEN}✓ 使用 pnpm${NC}"
-elif command -v npm &> /dev/null; then
-    PKG_MANAGER="npm"
-    echo -e "${GREEN}✓ 使用 npm${NC}"
+# 安装后端依赖
+echo -e "\n${YELLOW}[2/6] 安装后端依赖...${NC}"
+if [ -d "backend" ]; then
+    cd backend
+    npm install
+    echo -e "${GREEN}✓ 后端依赖安装完成${NC}"
+    cd "$SCRIPT_DIR"
 else
-    echo -e "${RED}✗ 未找到包管理器${NC}"
+    echo -e "${RED}✗ 未找到 backend 目录${NC}"
     exit 1
 fi
 
-# 安装依赖（如果 package.json 存在）
-echo -e "\n${YELLOW}[3/5] 安装依赖...${NC}"
-if [ -f "package.json" ]; then
-    echo "发现 package.json，安装依赖..."
-    $PKG_MANAGER install
-    echo -e "${GREEN}✓ 依赖安装完成${NC}"
+# 安装前端依赖
+echo -e "\n${YELLOW}[3/6] 安装前端依赖...${NC}"
+if [ -d "frontend" ]; then
+    cd frontend
+    npm install
+    echo -e "${GREEN}✓ 前端依赖安装完成${NC}"
+    cd "$SCRIPT_DIR"
 else
-    echo -e "${YELLOW}⚠ 未找到 package.json，跳过依赖安装${NC}"
+    echo -e "${RED}✗ 未找到 frontend 目录${NC}"
+    exit 1
 fi
 
-# 检查数据库
-echo -e "\n${YELLOW}[4/5] 检查数据库...${NC}"
-DB_FILE="./data/aitthermo.db"
-if [ -f "$DB_FILE" ]; then
-    echo -e "${GREEN}✓ 数据库文件存在: $DB_FILE${NC}"
-else
-    echo -e "${YELLOW}⚠ 数据库文件不存在，将在首次启动时创建${NC}"
-    mkdir -p ./data
-fi
+# 初始化数据库
+echo -e "\n${YELLOW}[4/6] 初始化数据库...${NC}"
+cd backend
+npm run db:migrate
+echo -e "${GREEN}✓ 数据库表创建完成${NC}"
+cd "$SCRIPT_DIR"
 
-# 创建上传目录
-echo -e "\n${YELLOW}[5/5] 创建必要的目录...${NC}"
-mkdir -p ./uploads/posters
+# 创建必要的目录
+echo -e "\n${YELLOW}[5/6] 创建必要的目录...${NC}"
+mkdir -p ./data/uploads/posters
 mkdir -p ./logs
 echo -e "${GREEN}✓ 目录创建完成${NC}"
 
-# 启动开发服务器
-echo -e "\n${YELLOW}=========================================="
-echo "  准备启动开发服务器"
-echo "==========================================${NC}"
-
-# 检查是否存在启动脚本
-if [ -f "./scripts/dev.sh" ]; then
-    echo "运行 ./scripts/dev.sh..."
-    ./scripts/dev.sh
-elif [ -f "package.json" ] && grep -q "\"dev\"" package.json; then
-    echo "运行 $PKG_MANAGER run dev..."
-    $PKG_MANAGER run dev
+# 询问是否填充测试数据
+echo -e "\n${YELLOW}[6/6] 测试数据...${NC}"
+read -p "是否填充测试数据？(y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    cd backend
+    npm run db:seed
+    echo -e "${GREEN}✓ 测试数据填充完成${NC}"
+    cd "$SCRIPT_DIR"
 else
-    echo -e "${YELLOW}⚠ 未找到开发服务器启动脚本"
-    echo "请手动配置并启动开发服务器${NC}"
-    echo ""
-    echo "可选操作："
-    echo "  1. 创建 scripts/dev.sh 启动脚本"
-    echo "  2. 在 package.json 中添加 dev 脚本"
-    echo "  3. 手动启动前后端服务"
+    echo -e "${YELLOW}⚠ 跳过测试数据填充${NC}"
 fi
+
+# 完成
+echo -e "\n${GREEN}=========================================="
+echo "  初始化完成！"
+echo "==========================================${NC}"
+echo ""
+echo "启动开发服务器："
+echo "  后端: cd backend && npm run dev"
+echo "  前端: cd frontend && npm run dev"
+echo ""
+echo "或者使用："
+echo "  ./scripts/dev.sh    # 同时启动前后端（需要安装 concurrently）"
+echo ""

@@ -1,0 +1,46 @@
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import { initDatabase } from './models/schema.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import baseRoutes from './routes/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// 初始化数据库
+initDatabase();
+
+// 中间件
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 静态文件服务（海报图片）
+const uploadsDir = path.join(__dirname, '../data/uploads');
+app.use('/uploads', express.static(uploadsDir));
+
+// API 路由
+app.use('/api', baseRoutes);
+
+// 404 处理
+app.use((_req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    code: 'NOT_FOUND',
+  });
+});
+
+// 错误处理中间件
+app.use(errorHandler);
+
+// 启动服务器
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`API available at http://localhost:${PORT}/api`);
+});
