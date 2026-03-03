@@ -122,6 +122,38 @@ get_pending_features() {
     fi
 }
 
+get_next_task() {
+    # 获取下一个待完成的任务（按 milestone 优先，再按 priority）
+    # milestone 顺序: M1 < M2 < M3 < M4 < M5
+    if command -v jq &> /dev/null; then
+        jq -r '
+            .features
+            | map(select(.passes == false))
+            | sort_by(
+                (.milestone | gsub("M"; "") | tonumber),
+                .priority
+            )
+            | .[0]
+            | "[\(.id)] \(.description) (\(.milestone), priority=\(.priority))"
+        ' feature_list.json
+    else
+        echo "[需要安装 jq 来获取任务详情]"
+    fi
+}
+
+get_current_milestone() {
+    # 获取当前正在进行的 milestone
+    if command -v jq &> /dev/null; then
+        jq -r '
+            .features
+            | map(select(.passes == false))
+            | sort_by(.milestone | gsub("M"; "") | tonumber)
+            | .[0].milestone
+            // "完成"
+        ' feature_list.json
+    fi
+}
+
 # ======================= 初始 Prompt =======================
 
 generate_prompt() {
@@ -137,11 +169,17 @@ generate_prompt() {
 首先执行以下命令了解项目状态：
 - 运行 `pwd` 确认工作目录
 - 阅读 `claude-progress.txt` 了解最新进度
-- 阅读 `feature_list.json` 找到下一个未完成的任务（passes: false）
+- 阅读 `feature_list.json` 找到下一个未完成的任务
 - 运行 `git log --oneline -5` 查看最近提交
 
-### 2. 选择任务
-从 feature_list.json 中选择 priority 值最小且 passes 为 false 的任务开始工作。
+### 2. 选择任务（重要！）
+从 feature_list.json 中按以下顺序选择任务：
+1. **优先按 milestone 排序**：M1 → M2 → M3 → M4 → M5
+2. **同一 milestone 内按 priority 排序**：数值小的优先
+
+选择规则：找到 milestone 最靠前、且该 milestone 内 priority 最小的未完成任务（passes: false）。
+
+例如：如果有 M1 的任务未完成，就不要选择 M2 的任务，即使 M2 的 priority 更小。
 
 ### 3. 执行开发
 - 阅读相关 PRD 文档了解需求
@@ -157,11 +195,12 @@ generate_prompt() {
 
 ## 重要规则
 
-1. **遇到阻断问题**：如果遇到无法解决的问题，在 claude-progress.txt 中记录问题详情，并停止工作等待人工介入
-2. **测试数据**：可以使用 mock 数据进行测试，不要等待真实数据
-3. **增量开发**：每次只完成一个功能，不要一次性做太多
-4. **代码质量**：确保每次提交的代码都是可工作的状态
-5. **文档更新**：每次工作后都要更新进度文件
+1. **Milestone 依赖**：必须按 M1→M2→M3→M4→M5 顺序完成，跨 milestone 会导致依赖问题
+2. **遇到阻断问题**：如果遇到无法解决的问题，在 claude-progress.txt 中记录问题详情，并停止工作等待人工介入
+3. **测试数据**：可以使用 mock 数据进行测试，不要等待真实数据
+4. **增量开发**：每次只完成一个功能，不要一次性做太多
+5. **代码质量**：确保每次提交的代码都是可工作的状态
+6. **文档更新**：每次工作后都要更新进度文件
 
 ## 开始工作
 请现在开始执行上述流程。
@@ -185,6 +224,12 @@ run_agent_iteration() {
         log_warn "所有任务已完成！无需继续运行。"
         return 0
     fi
+
+    # 显示当前 milestone 和下一个任务
+    local current_milestone=$(get_current_milestone)
+    local next_task=$(get_next_task)
+    log_info "当前里程碑: ${current_milestone}"
+    log_info "下一个任务: ${next_task}"
 
     # 生成 prompt
     local prompt=$(generate_prompt $current $total)
@@ -312,7 +357,9 @@ main() {
     log_section "运行总结"
     log_info "总运行次数: ${success_count} 成功, ${fail_count} 失败"
     log_info "总耗时: ${total_minutes} 分 ${total_seconds} 秒"
-    log_info "剩余任务: $(get_pending_features)"
+
+    local current_milestone=$(get_current_milestone)
+    log_info "当前里程碑: ${current_milestone}"
 
     local final_pending=$(get_pending_features)
     local completed_total=$((initial_pending - final_pending))

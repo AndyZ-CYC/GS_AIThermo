@@ -19,8 +19,16 @@
 - 初始化 Git 仓库
 - 创建 GitHub 仓库
 
-**当前状态**: 项目初始化阶段
-**下一步**: 开始 M1 里程碑 - 创建项目结构和基础数据模型
+### Session 2 - 2026-03-03
+**Agent**: Claude (Claude Code)
+**工作内容**:
+- 学习 Anthropic 的 long-running agents 最佳实践
+- 创建自动化开发流程脚本 run_agent.sh
+- 更新 .gitignore 忽略日志文件
+
+**当前状态**: 项目初始化完成，自动化脚本就绪
+**GitHub 仓库**: https://github.com/AndyZ-CYC/GS_AIThermo
+**下一步**: 使用 `./run_agent.sh <次数>` 启动自动化开发流程
 
 ---
 

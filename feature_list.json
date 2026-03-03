@@ -256,6 +256,7 @@
     "completed": 0,
     "in_progress": 0,
     "pending": 16,
+    "task_selection_rule": "按 milestone 排序（M1→M2→M3→M4→M5），同一 milestone 内按 priority 排序",
     "note": "It is unacceptable to remove or edit features because this could lead to missing or buggy functionality. Only change the 'passes' field when a feature is verified complete."
   }
 }
