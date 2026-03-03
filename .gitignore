@@ -54,5 +54,8 @@ temp/
 # Claude Code
 .claude/
 
+# Agent run logs (keep directory structure)
+logs/agent_runs/*.log
+
 # Playwright MCP
 .playwright-mcp/
