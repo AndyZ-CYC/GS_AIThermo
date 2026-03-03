@@ -33,7 +33,7 @@
         "创建 ToolCell 表",
         "创建关联表"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "F003",

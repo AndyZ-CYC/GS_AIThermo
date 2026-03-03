@@ -171,5 +171,15 @@ export function initDatabase(): void {
     ON dimension_value(dimension_id) WHERE is_deleted = 0
   `);
 
+  // 成熟度等级配置表（可选，便于后续维护）
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS maturity_config (
+      level       INTEGER PRIMARY KEY CHECK(level BETWEEN 1 AND 5),
+      label       TEXT    NOT NULL,
+      color_key   TEXT    NOT NULL,
+      sort_order  INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
   console.log('Database tables and indexes created successfully');
 }

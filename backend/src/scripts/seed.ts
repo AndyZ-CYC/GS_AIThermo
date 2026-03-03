@@ -3,6 +3,12 @@ import db from '../config/database.js';
 
 console.log('Seeding database with mock data...');
 
+// 插入成熟度配置
+const insertMaturityConfig = db.prepare(`
+  INSERT OR REPLACE INTO maturity_config (level, label, color_key, sort_order)
+  VALUES (?, ?, ?, ?)
+`);
+
 // 插入示例维度
 const insertDimension = db.prepare(`
   INSERT INTO dimension (name, sort_order, created_by)
@@ -43,6 +49,13 @@ const insertToolCell = db.prepare(`
 
 // 使用事务插入数据
 const seed = db.transaction(() => {
+  // 成熟度配置数据
+  insertMaturityConfig.run(1, '低', 'red', 1);
+  insertMaturityConfig.run(2, '较低', 'orange', 2);
+  insertMaturityConfig.run(3, '中', 'yellow', 3);
+  insertMaturityConfig.run(4, '较高', 'yellow-green', 4);
+  insertMaturityConfig.run(5, '高', 'green', 5);
+
   // 维度数据
   const gameplayDim = insertDimension.run('玩法', 1);
   const perspectiveDim = insertDimension.run('视角', 2);
@@ -164,6 +177,7 @@ seed();
 
 console.log('Seed completed!');
 console.log('Created:');
+console.log('  - 5 maturity levels');
 console.log('  - 3 dimensions with 4 values each');
 console.log('  - 4 game types');
 console.log('  - 4 role groups with 3 roles each (12 roles total)');
