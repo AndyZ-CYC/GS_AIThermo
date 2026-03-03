@@ -16,8 +16,15 @@ const PORT = process.env.PORT || 3001;
 // 初始化数据库
 initDatabase();
 
+// CORS 配置
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Vite 默认端口
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // 中间件
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -65,6 +65,14 @@ export interface GameTypeDimensionValue extends BaseEntity {
   dimension_value_id: number;
 }
 
+// 成熟度配置
+export interface MaturityConfig {
+  level: number; // 1-5
+  label: string;
+  color_key: string;
+  sort_order: number;
+}
+
 // API 响应类型
 export interface ApiResponse<T> {
   data: T;
