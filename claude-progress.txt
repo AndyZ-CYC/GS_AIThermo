@@ -1,192 +1,22 @@
-# AI 行业温度计 WebApp - 进度日志
+== AI 行业温度计 进度日志 ==
 
-> 此文件记录 Agent 的工作进度，帮助后续会话快速了解项目状态。
-> 最后更新：2026-03-04
+[2026-03-04] 项目重启 — 完成全部 MVP 框架搭建
+- 决策：从 Node.js/Express 迁移到 FastAPI (Python) + React (TypeScript)
+- 精简：移除维度体系、软删除改硬删除、maturity 改 0-100 分数制
+- 技术栈：FastAPI + SQLite / React 19 + Vite 7 + TailwindCSS 4 + React Query 5
 
----
+完成内容：
+- M0: 清理旧 backend/frontend 代码，更新 CLAUDE.md/.gitignore
+- M1-BE: FastAPI 后端完成（5 张表、20 个 API 端点、级联阻止、文件上传）
+- M1-FE: React 前端骨架（Vite + TailwindCSS + React Router + React Query + dnd-kit）
+- M1-P01: 矩阵总览页（横轴游戏类型+海报、纵轴两级工种、颜色矩阵网格、灰色缺失）
+- M2-P02: 游戏类型管理页（CRUD + 拖拽排序 + 海报上传/删除）
+- M2-P03: 工种管理页（两级 CRUD + 拖拽排序）
+- M3-M01: 工具卡片弹窗（详情/新增/编辑/删除，0-100 分数滑块+颜色预览）
+- M3-集成: 全部 API 端点测试通过（排序、级联阻止、唯一约束）
 
-## 会话记录
+启动方式：
+  后端: cd backend && uvicorn main:app --port 8000 --reload
+  前端: cd frontend && npm run dev
 
-### Session 1 - 2026-03-03
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- 项目初始化
-- 创建 Agent 持续运行架构文件：
-  - CLAUDE.md - 项目上下文说明
-  - feature_list.json - 功能清单（16个功能）
-  - claude-progress.txt - 本进度文件
-  - init.sh - 初始化脚本
-- 初始化 Git 仓库
-- 创建 GitHub 仓库
-
-### Session 2 - 2026-03-03
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- 学习 Anthropic 的 long-running agents 最佳实践
-- 创建自动化开发流程脚本 run_agent.sh
-- 更新 .gitignore 忽略日志文件
-
-### Session 3 - 2026-03-03
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- **完成 F001 - 初始化项目结构和依赖**
-- 前端项目：
-  - 使用 Vite + React + TypeScript 创建
-  - 安装依赖：react-router-dom, @tanstack/react-query, axios, lucide-react, clsx
-- 后端项目：
-  - 使用 Node.js + Express + TypeScript
-  - 使用 better-sqlite3 作为 SQLite 驱动
-  - 创建数据库配置和模型定义
-  - 创建错误处理中间件
-  - 创建基础路由（健康检查、版本信息）
-  - 创建数据库迁移脚本
-  - 创建测试数据填充脚本
-- 项目根目录：
-  - 创建统一的 package.json
-  - 安装 concurrently 用于同时启动前后端
-  - 更新 init.sh 初始化脚本
-  - 创建 scripts/dev.sh 开发服务器启动脚本
-
-### Session 4 - 2026-03-03
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- **完成 F002 - 创建数据库模型和迁移**
-- 验证并完善数据库表结构：
-  - game_type（游戏类型）
-  - game_type_poster（游戏类型海报）
-  - role_group（工种大类）
-  - role（工种子类）
-  - tool_cell（工具卡片）
-  - dimension（维度）
-  - dimension_value（维度取值）
-  - game_type_dimension_value（游戏类型-维度取值关联）
-  - maturity_config（成熟度等级配置）- 新增
-- 创建所有必要的索引：
-  - 唯一性约束索引：uq_tool_cell_active, uq_gt_dim_value_active
-  - 性能优化索引：idx_tool_cell_game_type, idx_tool_cell_role, idx_role_group, idx_poster_game_type, idx_dim_value_dim
-- 完善测试数据填充脚本：
-  - 添加成熟度配置初始数据
-  - 3 个维度（玩法、视角、美术风格）
-  - 4 个游戏类型
-  - 4 个工种大类，12 个工种子类
-  - 7 个工具卡片示例
-
-### Session 5 - 2026-03-03
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- **完成 F003 - 实现基础 API 框架**
-- 完善 CORS 配置：
-  - 支持指定前端源地址
-  - 支持 credentials
-  - 指定允许的方法和头部
-- 添加请求验证中间件：
-  - requireBody - 验证请求体必填字段
-  - requireParams - 验证路由参数必填
-  - validateRange - 验证数值范围
-  - validateLength - 验证字符串长度
-  - validateUrl - 验证 URL 格式
-  - validateNonEmptyArray - 验证数组非空
-- 添加 MaturityConfig 类型定义
-- 验证 API 端点正常工作（/api/health, /api/version）
-
-### Session 6 - 2026-03-04
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- **完成 F009 - 矩阵总览页前端实现**
-- 创建 MatrixOverview 组件和 CSS Module
-- 实现"热成像仪表盘"美学风格：
-  - 深色主题 + 热成像渐变色彩
-  - JetBrains Mono + Space Grotesk 字体组合
-  - 扫描线叠加效果
-  - 发光单元格效果
-- 功能实现：
-  - 横轴游戏类型卡片（支持水平滚动、海报堆叠展示）
-  - 纵轴工种两级列表（大类可折叠/展开）
-  - 单元格渲染（工具卡片 + 成熟度颜色编码）
-  - 灰色占位单元格（待添加状态）
-  - 响应式布局
-  - 底部统计信息
-- 使用 @tanstack/react-query 获取数据
-- 使用 lucide-react 图标库
-
-### Session 7 - 2026-03-04
-**Agent**: Claude (Claude Code)
-**工作内容**:
-- **完成 F004 - 游戏类型 CRUD API**
-- 发现并修复路由顺序问题：
-  - `PUT /api/game-types/sort` 必须在 `PUT /api/game-types/:id` 之前定义
-  - 否则 "sort" 会被当作 :id 参数匹配
-- 验证所有 API 端点正常工作：
-  - GET /api/game-types - 获取列表（含海报和维度取值）
-  - GET /api/game-types/:id - 获取单个
-  - POST /api/game-types - 创建（支持维度取值关联）
-  - PUT /api/game-types/:id - 更新
-  - DELETE /api/game-types/:id - 软删除（含级联检查）
-  - PUT /api/game-types/sort - 批量排序
-- API 实现特性：
-  - 软删除机制
-  - 级联依赖检查（删除前检查 tool_cells 和 posters）
-  - 维度取值覆盖式更新
-  - 事务性批量排序
-
-**技术决策**:
-- 前端框架：React + TypeScript + Vite
-- 后端框架：Node.js + Express + TypeScript
-- 数据库：SQLite (better-sqlite3)
-- 图标库：lucide-react
-- 样式方案：CSS Modules（不使用 Tailwind CSS，使用原生 CSS 变量）
-
-**当前状态**: F004 完成，M2 里程碑进行中
-**GitHub 仓库**: https://github.com/AndyZ-CYC/GS_AIThermo
-**下一步**: F005 - 工种管理 CRUD API（M2 内下一个任务）
-
----
-
-## 里程碑进度
-
-| 里程碑 | 状态 | 完成日期 |
-|--------|------|----------|
-| M1: 基础数据模型 + 矩阵总览页 | ✅ 完成 | 2026-03-04 |
-| M2: GameType/Role CRUD + 排序 | 🔄 进行中 | - |
-| M3: ToolCell CRUD + 详情弹窗 | 未开始 | - |
-| M4: 海报上传/管理 | 未开始 | - |
-| M5: 维度体系管理 | 未开始 | - |
-
----
-
-## 功能完成情况
-
-| 功能 | 状态 | 备注 |
-|------|------|------|
-| F001 初始化项目结构和依赖 | ✅ 完成 | 前后端项目、数据库配置、开发脚本 |
-| F002 创建数据库模型和迁移 | ✅ 完成 | 9 张表 + 7 个索引 + 测试数据 |
-| F003 实现基础 API 框架 | ✅ 完成 | CORS + 错误处理 + 请求验证中间件 |
-| F004 游戏类型 CRUD API | ✅ 完成 | GET/POST/PUT/DELETE + 排序 + 级联检查 |
-| F009 矩阵总览页 | ✅ 完成 | 热成像风格 + 响应式布局 |
-| F005-F008,F010-F016 | 🔲 未开始 | - |
-
----
-
-## 已知问题
-（暂无）
-
----
-
-## 技术决策记录
-
-### 已决定
-- [x] 前端框架：React + TypeScript + Vite
-- [x] 后端框架：Node.js + Express + TypeScript
-- [x] 数据库：SQLite (better-sqlite3)
-- [x] 图标库：lucide-react
-- [x] 样式方案：CSS Modules + CSS 变量
-
-### 待决定
-- [ ] UI 组件库选择（目前使用自定义组件）
-
----
-
-## 备注
-- 本项目为内网部署，无鉴权需求（v0）
-- 数据库优先使用 SQLite
-- 所有删除操作使用软删除
+当前状态：MVP 框架完成，可进行功能验证
