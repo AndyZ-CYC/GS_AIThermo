@@ -7,12 +7,16 @@ from models import ToolCellCreate, ToolCellUpdate, ToolCellOut
 router = APIRouter(prefix="/api/tool-cells", tags=["tool-cells"])
 
 
+def _build_tool_cell_out(row: dict) -> ToolCellOut:
+    return ToolCellOut(**{**row, "is_na": bool(row.get("is_na", 0))})
+
+
 @router.get("", response_model=list[ToolCellOut])
 def list_tool_cells():
     db = get_db()
     rows = db.execute("SELECT * FROM tool_cell").fetchall()
     db.close()
-    return [ToolCellOut(**dict(r)) for r in rows]
+    return [_build_tool_cell_out(dict(r)) for r in rows]
 
 
 @router.post("", response_model=ToolCellOut, status_code=201)
@@ -39,17 +43,31 @@ def create_tool_cell(body: ToolCellCreate):
             "code": "DUPLICATE_CELL",
         })
 
+    if body.is_na:
+        tool_name = "N/A"
+        maturity_score = 0
+        official_url = "-"
+        short_desc = "不适用"
+    else:
+        if not body.tool_name or not body.official_url or not body.short_desc:
+            db.close()
+            raise HTTPException(422, "非 N/A 卡片需填写工具名称、官网链接和简短描述")
+        tool_name = body.tool_name
+        maturity_score = body.maturity_score
+        official_url = body.official_url
+        short_desc = body.short_desc
+
     cur = db.execute(
         """INSERT INTO tool_cell
-           (game_type_id, role_id, tool_name, maturity_score, official_url, short_desc, report_url)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (body.game_type_id, body.role_id, body.tool_name, body.maturity_score,
-         body.official_url, body.short_desc, body.report_url),
+           (game_type_id, role_id, is_na, tool_name, maturity_score, official_url, short_desc, report_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (body.game_type_id, body.role_id, int(body.is_na), tool_name, maturity_score,
+         official_url, short_desc, body.report_url),
     )
     db.commit()
     row = db.execute("SELECT * FROM tool_cell WHERE id = ?", (cur.lastrowid,)).fetchone()
     db.close()
-    return ToolCellOut(**dict(row))
+    return _build_tool_cell_out(dict(row))
 
 
 @router.put("/{cell_id}", response_model=ToolCellOut)
@@ -60,18 +78,32 @@ def update_tool_cell(cell_id: int, body: ToolCellUpdate):
         db.close()
         raise HTTPException(404, "工具卡片不存在")
 
+    if body.is_na:
+        tool_name = "N/A"
+        maturity_score = 0
+        official_url = "-"
+        short_desc = "不适用"
+    else:
+        if not body.tool_name or not body.official_url or not body.short_desc:
+            db.close()
+            raise HTTPException(422, "非 N/A 卡片需填写工具名称、官网链接和简短描述")
+        tool_name = body.tool_name
+        maturity_score = body.maturity_score
+        official_url = body.official_url
+        short_desc = body.short_desc
+
     db.execute(
         """UPDATE tool_cell SET
-           tool_name = ?, maturity_score = ?, official_url = ?,
+           is_na = ?, tool_name = ?, maturity_score = ?, official_url = ?,
            short_desc = ?, report_url = ?, updated_at = datetime('now'), updated_by = 'system'
            WHERE id = ?""",
-        (body.tool_name, body.maturity_score, body.official_url,
-         body.short_desc, body.report_url, cell_id),
+        (int(body.is_na), tool_name, maturity_score, official_url,
+         short_desc, body.report_url, cell_id),
     )
     db.commit()
     row = db.execute("SELECT * FROM tool_cell WHERE id = ?", (cell_id,)).fetchone()
     db.close()
-    return ToolCellOut(**dict(row))
+    return _build_tool_cell_out(dict(row))
 
 
 @router.delete("/{cell_id}", status_code=204)
@@ -113,7 +145,7 @@ async def upload_icon(cell_id: int, file: UploadFile = File(...)):
     db.commit()
     row = db.execute("SELECT * FROM tool_cell WHERE id = ?", (cell_id,)).fetchone()
     db.close()
-    return ToolCellOut(**dict(row))
+    return _build_tool_cell_out(dict(row))
 
 
 @router.delete("/{cell_id}/icon", response_model=ToolCellOut)
@@ -132,7 +164,7 @@ def delete_icon(cell_id: int):
     db.commit()
     row = db.execute("SELECT * FROM tool_cell WHERE id = ?", (cell_id,)).fetchone()
     db.close()
-    return ToolCellOut(**dict(row))
+    return _build_tool_cell_out(dict(row))
 
 
 def _remove_icon_file(icon_path: str):

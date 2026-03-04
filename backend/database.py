@@ -88,9 +88,21 @@ def init_db():
     """)
 
     # Migrate: add icon_path if missing (safe for existing DBs)
-    cols = [r["name"] for r in conn.execute("PRAGMA table_info(tool_cell)").fetchall()]
-    if "icon_path" not in cols:
+    tc_cols = [r["name"] for r in conn.execute("PRAGMA table_info(tool_cell)").fetchall()]
+    if "icon_path" not in tc_cols:
         conn.execute("ALTER TABLE tool_cell ADD COLUMN icon_path TEXT")
+        conn.commit()
+
+    if "is_na" not in tc_cols:
+        conn.execute("ALTER TABLE tool_cell ADD COLUMN is_na INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+
+    gt_cols = [r["name"] for r in conn.execute("PRAGMA table_info(game_type)").fetchall()]
+    if "description" not in gt_cols:
+        conn.execute("ALTER TABLE game_type ADD COLUMN description TEXT DEFAULT ''")
+        conn.commit()
+    if "examples" not in gt_cols:
+        conn.execute("ALTER TABLE game_type ADD COLUMN examples TEXT DEFAULT '[]'")
         conn.commit()
 
     conn.close()

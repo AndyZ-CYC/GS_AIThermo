@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { ToolCell, GameType, RoleGroup } from "../types";
 import { getMaturityTier } from "../utils/maturity";
 import {
@@ -36,6 +37,8 @@ export default function ToolCellModal({
   const uploadIconMut = useUploadIcon();
   const deleteIconMut = useDeleteIcon();
 
+  const [isNa, setIsNa] = useState(false);
+
   const [form, setForm] = useState({
     tool_name: cell?.tool_name ?? "",
     maturity_score: cell?.maturity_score ?? 50,
@@ -46,13 +49,24 @@ export default function ToolCellModal({
 
   useEffect(() => {
     if (cell && mode === "edit") {
-      setForm({
-        tool_name: cell.tool_name,
-        maturity_score: cell.maturity_score,
-        official_url: cell.official_url,
-        short_desc: cell.short_desc,
-        report_url: cell.report_url ?? "",
-      });
+      if (cell.is_na) {
+        setIsNa(false);
+        setForm({
+          tool_name: "",
+          maturity_score: 50,
+          official_url: "",
+          short_desc: "",
+          report_url: "",
+        });
+      } else {
+        setForm({
+          tool_name: cell.tool_name,
+          maturity_score: cell.maturity_score,
+          official_url: cell.official_url,
+          short_desc: cell.short_desc,
+          report_url: cell.report_url ?? "",
+        });
+      }
     }
   }, [cell, mode]);
 
@@ -65,8 +79,21 @@ export default function ToolCellModal({
   const tier = getMaturityTier(form.maturity_score);
 
   const handleSubmit = async () => {
+    if (isNa) {
+      if (mode === "create" && effectiveGtId && effectiveRoleId) {
+        await createMutation.mutateAsync({
+          game_type_id: effectiveGtId,
+          role_id: effectiveRoleId,
+          is_na: true,
+        });
+      }
+      handleAnimatedClose();
+      return;
+    }
+
     const data = {
       ...form,
+      is_na: false,
       report_url: form.report_url || undefined,
     };
     if (mode === "create" && effectiveGtId && effectiveRoleId) {
@@ -108,7 +135,17 @@ export default function ToolCellModal({
     setTimeout(onClose, 180);
   };
 
-  return (
+  const isViewNa = mode === "view" && cell?.is_na;
+
+  const title = isViewNa
+    ? "不适用标记"
+    : mode === "create"
+      ? "添加工具卡片"
+      : mode === "edit"
+        ? "编辑工具卡片"
+        : "工具详情";
+
+  return createPortal(
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
         visible ? "opacity-100" : "opacity-0"
@@ -124,9 +161,7 @@ export default function ToolCellModal({
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-text-primary">
-            {mode === "create" ? "添加工具卡片" : mode === "edit" ? "编辑工具卡片" : "工具详情"}
-          </h2>
+          <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button
             onClick={handleAnimatedClose}
             className="text-text-muted hover:text-text-secondary text-xl leading-none transition-colors"
@@ -146,7 +181,9 @@ export default function ToolCellModal({
             </span>
           </div>
 
-          {mode === "view" && cell ? (
+          {isViewNa ? (
+            <NaViewContent />
+          ) : mode === "view" && cell ? (
             <ViewContent
               cell={cell}
               tier={tier}
@@ -154,7 +191,12 @@ export default function ToolCellModal({
               onIconDelete={handleIconDelete}
             />
           ) : (
-            <EditForm form={form} setForm={setForm} tier={tier} />
+            <>
+              {mode === "create" && (
+                <NaToggle isNa={isNa} onChange={setIsNa} />
+              )}
+              {!isNa && <EditForm form={form} setForm={setForm} tier={tier} />}
+            </>
           )}
           <input
             ref={iconFileRef}
@@ -167,7 +209,30 @@ export default function ToolCellModal({
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-border flex justify-between">
-          {mode === "view" ? (
+          {isViewNa ? (
+            <>
+              <button
+                onClick={handleDelete}
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+              >
+                移除标记
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAnimatedClose}
+                  className="px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface rounded-md transition-colors"
+                >
+                  关闭
+                </button>
+                <button
+                  onClick={onSwitchEdit}
+                  className="px-4 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent-hover transition-colors"
+                >
+                  转为工具卡片
+                </button>
+              </div>
+            </>
+          ) : mode === "view" ? (
             <>
               <button
                 onClick={handleDelete}
@@ -202,7 +267,7 @@ export default function ToolCellModal({
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={!form.tool_name || !form.official_url || !form.short_desc}
+                  disabled={!isNa && (!form.tool_name || !form.official_url || !form.short_desc)}
                   className="px-4 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
                 >
                   保存
@@ -212,6 +277,56 @@ export default function ToolCellModal({
           )}
         </div>
       </div>
+    </div>,
+    document.body
+  );
+}
+
+function NaToggle({
+  isNa,
+  onChange,
+}: {
+  isNa: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-3 p-3 rounded-lg bg-bg-surface border border-border cursor-pointer select-none group hover:border-accent/30 transition-colors">
+      <input
+        type="checkbox"
+        checked={isNa}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only peer"
+      />
+      <div className="w-9 h-5 rounded-full bg-text-muted/30 peer-checked:bg-accent/70 relative transition-colors">
+        <div
+          className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200"
+          style={{ transform: isNa ? "translateX(16px)" : "translateX(0)" }}
+        />
+      </div>
+      <div>
+        <span className="text-sm text-text-primary font-medium">标记为「不适用」</span>
+        <p className="text-xs text-text-muted mt-0.5">该游戏类型与工种的组合没有实际意义</p>
+      </div>
+    </label>
+  );
+}
+
+function NaViewContent() {
+  return (
+    <div className="flex flex-col items-center py-6 gap-3">
+      <div className="w-16 h-16 rounded-full bg-bg-surface flex items-center justify-center">
+        <svg
+          className="w-8 h-8 text-text-muted"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+      </div>
+      <p className="text-text-secondary text-sm">该组合已标记为「不适用」</p>
+      <p className="text-text-muted text-xs">表示此游戏类型与工种的组合没有实际意义</p>
     </div>
   );
 }
@@ -229,7 +344,6 @@ function ViewContent({
 }) {
   return (
     <div className="space-y-3">
-      {/* Icon */}
       <div className="flex items-center gap-3">
         {cell.icon_path ? (
           <div className="relative group">

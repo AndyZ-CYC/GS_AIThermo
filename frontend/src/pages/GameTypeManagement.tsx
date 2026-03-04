@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type KeyboardEvent } from "react";
 import {
   useGameTypes,
   useCreateGameType,
@@ -34,7 +34,7 @@ export default function GameTypeManagement() {
   const sortMut = useSortGameTypes();
 
   const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -42,7 +42,7 @@ export default function GameTypeManagement() {
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
-    await createMut.mutateAsync(newName.trim());
+    await createMut.mutateAsync({ name: newName.trim() });
     setNewName("");
   };
 
@@ -94,9 +94,10 @@ export default function GameTypeManagement() {
               <SortableGameTypeCard
                 key={gt.id}
                 gameType={gt}
-                isEditing={editingId === gt.id}
-                onEdit={() => setEditingId(gt.id)}
-                onCancelEdit={() => setEditingId(null)}
+                isExpanded={expandedId === gt.id}
+                onToggleExpand={() =>
+                  setExpandedId((prev) => (prev === gt.id ? null : gt.id))
+                }
               />
             ))}
           </div>
@@ -114,14 +115,12 @@ export default function GameTypeManagement() {
 
 function SortableGameTypeCard({
   gameType,
-  isEditing,
-  onEdit,
-  onCancelEdit,
+  isExpanded,
+  onToggleExpand,
 }: {
   gameType: GameType;
-  isEditing: boolean;
-  onEdit: () => void;
-  onCancelEdit: () => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: gameType.id });
@@ -137,11 +136,31 @@ function SortableGameTypeCard({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [editName, setEditName] = useState(gameType.name);
+  const [editDesc, setEditDesc] = useState(gameType.description ?? "");
+  const [editExamples, setEditExamples] = useState<string[]>(
+    gameType.examples ?? []
+  );
+
+  const resetForm = () => {
+    setEditName(gameType.name);
+    setEditDesc(gameType.description ?? "");
+    setEditExamples(gameType.examples ?? []);
+  };
 
   const handleSave = async () => {
     if (!editName.trim()) return;
-    await updateMut.mutateAsync({ id: gameType.id, name: editName.trim() });
-    onCancelEdit();
+    await updateMut.mutateAsync({
+      id: gameType.id,
+      name: editName.trim(),
+      description: editDesc.trim(),
+      examples: editExamples,
+    });
+    onToggleExpand();
+  };
+
+  const handleCancel = () => {
+    resetForm();
+    onToggleExpand();
   };
 
   const handleDelete = async () => {
@@ -166,13 +185,16 @@ function SortableGameTypeCard({
     }
   };
 
+  const hasExtraInfo = !!(gameType.description || (gameType.examples?.length ?? 0) > 0);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-bg-surface border border-border rounded-lg p-3"
+      className="bg-bg-surface border border-border rounded-lg overflow-hidden"
     >
-      <div className="flex items-center gap-2">
+      {/* Collapsed header row */}
+      <div className="flex items-center gap-2 p-3">
         <span
           {...attributes}
           {...listeners}
@@ -181,47 +203,31 @@ function SortableGameTypeCard({
           ⠿
         </span>
 
-        {isEditing ? (
-          <div className="flex-1 flex gap-2">
-            <input
-              className={`flex-1 ${inputCls}`}
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              autoFocus
-            />
-            <button
-              onClick={handleSave}
-              className="text-sm text-accent hover:text-accent-hover transition-colors"
-            >
-              保存
-            </button>
-            <button
-              onClick={onCancelEdit}
-              className="text-sm text-text-muted hover:text-text-secondary transition-colors"
-            >
-              取消
-            </button>
-          </div>
-        ) : (
-          <span className="flex-1 text-base font-medium text-text-primary">
-            {gameType.name}
+        <button
+          onClick={onToggleExpand}
+          className="text-text-muted hover:text-text-secondary transition-transform duration-200 text-sm"
+          style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+        >
+          ▶
+        </button>
+
+        <span className="flex-1 text-base font-medium text-text-primary">
+          {gameType.name}
+        </span>
+
+        {hasExtraInfo && !isExpanded && (
+          <span className="text-xs text-text-muted px-2 py-0.5 rounded-full bg-bg-elevated">
+            {gameType.examples?.length ?? 0} 个示例
           </span>
         )}
 
-        {!isEditing && (
+        {!isExpanded && (
           <div className="flex gap-1">
             <button
-              onClick={onEdit}
+              onClick={onToggleExpand}
               className="text-sm text-accent hover:text-accent-hover px-2 py-1 transition-colors"
             >
               编辑
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="text-sm text-text-secondary hover:text-text-primary px-2 py-1 transition-colors"
-            >
-              上传海报
             </button>
             <button
               onClick={handleDelete}
@@ -241,25 +247,165 @@ function SortableGameTypeCard({
         />
       </div>
 
-      {gameType.posters.length > 0 && (
-        <div className="flex gap-2 mt-2 flex-wrap">
-          {gameType.posters.map((p) => (
-            <div key={p.id} className="relative group">
-              <img
-                src={p.file_path}
-                className="w-16 h-16 object-cover rounded border border-border"
-                alt=""
-              />
+      {/* Expanded panel */}
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          maxHeight: isExpanded ? "600px" : "0",
+          opacity: isExpanded ? 1 : 0,
+          overflow: "hidden",
+        }}
+      >
+        <div className="px-4 pb-4 pt-1 space-y-4 border-t border-border">
+          <label className="block">
+            <span className="text-xs text-text-muted">名称</span>
+            <input
+              className={`mt-0.5 w-full ${inputCls}`}
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-xs text-text-muted">类别描述</span>
+            <textarea
+              className={`mt-0.5 w-full ${inputCls} resize-none`}
+              rows={2}
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="对该游戏类型的描述..."
+            />
+          </label>
+
+          <div>
+            <span className="text-xs text-text-muted">类别示例</span>
+            <TagInput
+              tags={editExamples}
+              onChange={setEditExamples}
+              placeholder="输入后按 Enter 添加..."
+            />
+          </div>
+
+          {/* Posters section */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-text-muted">海报</span>
               <button
-                onClick={() => deletePosterMut.mutate(p.id)}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                onClick={() => fileRef.current?.click()}
+                className="text-xs text-accent hover:text-accent-hover transition-colors"
               >
-                &times;
+                上传海报
               </button>
             </div>
-          ))}
+            {gameType.posters.length > 0 ? (
+              <div className="flex gap-2 flex-wrap">
+                {gameType.posters.map((p) => (
+                  <div key={p.id} className="relative group">
+                    <img
+                      src={p.file_path}
+                      className="w-16 h-16 object-cover rounded border border-border"
+                      alt=""
+                    />
+                    <button
+                      onClick={() => deletePosterMut.mutate(p.id)}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted">暂无海报</p>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-between pt-1">
+            <button
+              onClick={handleDelete}
+              className="text-sm text-red-400 hover:text-red-300 transition-colors"
+            >
+              删除
+            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-md transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!editName.trim()}
+                className="px-4 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
+              >
+                保存
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+
+function TagInput({
+  tags,
+  onChange,
+  placeholder,
+}: {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+  placeholder?: string;
+}) {
+  const [input, setInput] = useState("");
+
+  const addTag = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      onChange([...tags, trimmed]);
+    }
+    setInput("");
+  };
+
+  const removeTag = (idx: number) => {
+    onChange(tags.filter((_, i) => i !== idx));
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(input);
+    } else if (e.key === "Backspace" && !input && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  return (
+    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 bg-bg-surface border border-border rounded-md px-2 py-1.5 focus-within:ring-2 focus-within:ring-accent/40 focus-within:border-accent/60 transition-colors min-h-[38px]">
+      {tags.map((tag, i) => (
+        <span
+          key={`${tag}-${i}`}
+          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
+        >
+          {tag}
+          <button
+            onClick={() => removeTag(i)}
+            className="hover:text-red-400 transition-colors leading-none text-sm"
+          >
+            &times;
+          </button>
+        </span>
+      ))}
+      <input
+        className="flex-1 min-w-[80px] bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={() => input && addTag(input)}
+        placeholder={tags.length === 0 ? placeholder : ""}
+      />
     </div>
   );
 }

@@ -59,3 +59,37 @@ textarea::placeholder {
 .animate-page-in {
   animation: page-in 250ms ease-out both;
 }
+
+.matrix-scroll-container::-webkit-scrollbar {
+  width: 6px;
+  height: 10px;
+}
+.matrix-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 5px;
+}
+.matrix-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+}
+.matrix-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.matrix-scroll-container {
+  scrollbar-gutter: stable;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 150ms ease-out both;
+}

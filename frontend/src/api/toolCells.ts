@@ -7,20 +7,22 @@ export const fetchToolCells = () =>
 export const createToolCell = (data: {
   game_type_id: number;
   role_id: number;
-  tool_name: string;
-  maturity_score: number;
-  official_url: string;
-  short_desc: string;
+  is_na?: boolean;
+  tool_name?: string;
+  maturity_score?: number;
+  official_url?: string;
+  short_desc?: string;
   report_url?: string;
 }) => client.post<ToolCell>("/tool-cells", data).then((r) => r.data);
 
 export const updateToolCell = (
   id: number,
   data: {
-    tool_name: string;
-    maturity_score: number;
-    official_url: string;
-    short_desc: string;
+    is_na?: boolean;
+    tool_name?: string;
+    maturity_score?: number;
+    official_url?: string;
+    short_desc?: string;
     report_url?: string | null;
   }
 ) => client.put<ToolCell>(`/tool-cells/${id}`, data).then((r) => r.data);

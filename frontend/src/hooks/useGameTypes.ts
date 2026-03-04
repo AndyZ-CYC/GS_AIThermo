@@ -8,7 +8,8 @@ export function useGameTypes() {
 export function useCreateGameType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => api.createGameType(name),
+    mutationFn: (data: { name: string; description?: string; examples?: string[] }) =>
+      api.createGameType(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["gameTypes"] }),
   });
 }
@@ -16,7 +17,15 @@ export function useCreateGameType() {
 export function useUpdateGameType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => api.updateGameType(id, name),
+    mutationFn: ({
+      id,
+      ...data
+    }: {
+      id: number;
+      name: string;
+      description?: string;
+      examples?: string[];
+    }) => api.updateGameType(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["gameTypes"] }),
   });
 }

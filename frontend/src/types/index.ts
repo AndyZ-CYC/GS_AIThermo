@@ -8,6 +8,8 @@ export interface Poster {
 export interface GameType {
   id: number;
   name: string;
+  description: string;
+  examples: string[];
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -32,6 +34,7 @@ export interface ToolCell {
   id: number;
   game_type_id: number;
   role_id: number;
+  is_na: boolean;
   tool_name: string;
   maturity_score: number;
   official_url: string;

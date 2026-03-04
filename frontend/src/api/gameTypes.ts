@@ -4,11 +4,16 @@ import type { GameType } from "../types";
 export const fetchGameTypes = () =>
   client.get<GameType[]>("/game-types").then((r) => r.data);
 
-export const createGameType = (name: string) =>
-  client.post<GameType>("/game-types", { name }).then((r) => r.data);
+export const createGameType = (data: {
+  name: string;
+  description?: string;
+  examples?: string[];
+}) => client.post<GameType>("/game-types", data).then((r) => r.data);
 
-export const updateGameType = (id: number, name: string) =>
-  client.put<GameType>(`/game-types/${id}`, { name }).then((r) => r.data);
+export const updateGameType = (
+  id: number,
+  data: { name: string; description?: string; examples?: string[] }
+) => client.put<GameType>(`/game-types/${id}`, data).then((r) => r.data);
 
 export const deleteGameType = (id: number) =>
   client.delete(`/game-types/${id}`);

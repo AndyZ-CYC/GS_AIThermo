@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useGameTypes } from "../hooks/useGameTypes";
 import { useRoleGroups } from "../hooks/useRoles";
 import { useToolCells } from "../hooks/useToolCells";
@@ -20,6 +20,8 @@ export default function MatrixOverview() {
   }>({ open: false, mode: "view" });
 
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
+  const scrollRef = useRef<HTMLDivElement>(null);
+
 
   if (gtLoading || rgLoading || tcLoading) {
     return <MatrixSkeleton />;
@@ -65,17 +67,23 @@ export default function MatrixOverview() {
         <MaturityLegend />
       </div>
 
-      <div className="overflow-auto pb-4">
+      <div
+        ref={scrollRef}
+        className="matrix-scroll-container overflow-auto pb-2"
+        style={{ maxHeight: "calc(100vh - 180px)" }}
+      >
         <div
           className="grid gap-1.5"
           style={{
             gridTemplateColumns: `200px repeat(${gameTypes.length}, minmax(140px, 1fr))`,
           }}
         >
-          {/* Header row */}
-          <div className="sticky left-0 z-20 bg-bg-base" />
+          {/* Header row — sticky top */}
+          <div className="sticky top-0 left-0 z-30 bg-bg-base" />
           {gameTypes.map((gt) => (
-            <GameTypeHeader key={gt.id} gameType={gt} />
+            <div key={gt.id} className="sticky top-0 z-20 bg-bg-base pt-1 pb-1">
+              <GameTypeHeader gameType={gt} />
+            </div>
           ))}
 
           {/* Data rows by group */}
@@ -137,15 +145,41 @@ function MaturityLegend() {
 
 function GameTypeHeader({ gameType }: { gameType: GameType }) {
   const hasPosters = gameType.posters.length > 0;
+  const hasExtra = !!(gameType.description || (gameType.examples?.length ?? 0) > 0);
+
+  const [showPopover, setShowPopover] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const handleEnter = useCallback(() => {
+    if (!hasExtra) return;
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPopover(true), 250);
+  }, [hasExtra]);
+
+  const handleLeave = useCallback(() => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowPopover(false), 150);
+  }, []);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
   return (
     <div
-      className={`flex flex-col items-center gap-2 px-2 py-4 rounded-lg bg-bg-surface/60 ${
+      className={`relative flex flex-col items-center gap-2 px-2 py-4 rounded-lg bg-bg-surface/60 transition-all duration-200 ${
         hasPosters ? "justify-between" : "justify-center"
-      }`}
+      } ${hasExtra ? "cursor-pointer hover:scale-[1.03] hover:bg-bg-surface" : ""}`}
+      style={{
+        ...(showPopover ? { zIndex: 35, boxShadow: "0 4px 16px rgba(0,0,0,0.3)" } : {}),
+      }}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
     >
       <span className="text-base font-medium text-text-primary text-center leading-tight">
         {gameType.name}
       </span>
+      {hasExtra && (
+        <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+      )}
       {hasPosters && (
         <div className="flex justify-center -space-x-2">
           {gameType.posters.slice(0, 3).map((p) => (
@@ -160,6 +194,31 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
             <span className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
               +{gameType.posters.length - 3}
             </span>
+          )}
+        </div>
+      )}
+
+      {showPopover && hasExtra && (
+        <div
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-56 border border-border rounded-lg p-3 space-y-2 animate-fade-in"
+          style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.6)", backgroundColor: "#2a2a30" }}
+          onMouseEnter={() => { clearTimeout(timerRef.current); }}
+          onMouseLeave={handleLeave}
+        >
+          {gameType.description && (
+            <p className="text-xs text-text-secondary leading-relaxed">{gameType.description}</p>
+          )}
+          {(gameType.examples?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {gameType.examples.map((ex) => (
+                <span
+                  key={ex}
+                  className="inline-block px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
+                >
+                  {ex}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -304,6 +363,26 @@ function CellCard({
     );
   }
 
+  if (cell.is_na) {
+    return (
+      <div
+        className="rounded-[10px] min-h-[56px] cursor-pointer transition-all duration-200 hover:opacity-80 relative overflow-hidden flex items-center justify-center gap-1.5 bg-bg-surface/50 border border-border/50"
+        onClick={onView}
+      >
+        <svg
+          className="w-4 h-4 text-text-muted"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        <span className="text-xs text-text-muted">不适用</span>
+      </div>
+    );
+  }
+
   const tier = getMaturityTier(cell.maturity_score);
 
   return (
@@ -315,14 +394,12 @@ function CellCard({
       }}
       onClick={onView}
     >
-      {/* Top shine gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: "linear-gradient(to bottom, rgba(255,255,255,0.04), transparent 50%)",
         }}
       />
-      {/* Left indicator bar */}
       <div
         className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
         style={{ backgroundColor: tier.indicatorColor }}
@@ -341,8 +418,7 @@ function CellCard({
           {cell.tool_name}
         </span>
       </div>
-      {/* Hover: open official URL */}
-      {cell.official_url && (
+      {cell.official_url && cell.official_url !== "-" && (
         <a
           href={cell.official_url}
           target="_blank"

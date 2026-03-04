@@ -1,5 +1,6 @@
 import uuid
 import os
+import json
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from database import get_db, UPLOAD_DIR
 from models import (
@@ -11,9 +12,16 @@ router = APIRouter(prefix="/api/game-types", tags=["game-types"])
 
 
 def _build_game_type_out(row: dict, posters: list[dict]) -> GameTypeOut:
+    raw_examples = row.get("examples") or "[]"
+    try:
+        examples = json.loads(raw_examples)
+    except (json.JSONDecodeError, TypeError):
+        examples = []
     return GameTypeOut(
         id=row["id"],
         name=row["name"],
+        description=row.get("description") or "",
+        examples=examples,
         sort_order=row["sort_order"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
@@ -41,8 +49,8 @@ def create_game_type(body: GameTypeCreate):
     db = get_db()
     max_order = db.execute("SELECT COALESCE(MAX(sort_order), 0) FROM game_type").fetchone()[0]
     cur = db.execute(
-        "INSERT INTO game_type (name, sort_order) VALUES (?, ?)",
-        (body.name, max_order + 1),
+        "INSERT INTO game_type (name, description, examples, sort_order) VALUES (?, ?, ?, ?)",
+        (body.name, body.description, json.dumps(body.examples, ensure_ascii=False), max_order + 1),
     )
     db.commit()
     row = db.execute("SELECT * FROM game_type WHERE id = ?", (cur.lastrowid,)).fetchone()
@@ -67,8 +75,8 @@ def update_game_type(game_type_id: int, body: GameTypeUpdate):
         db.close()
         raise HTTPException(404, "游戏类型不存在")
     db.execute(
-        "UPDATE game_type SET name = ?, updated_at = datetime('now'), updated_by = 'system' WHERE id = ?",
-        (body.name, game_type_id),
+        "UPDATE game_type SET name = ?, description = ?, examples = ?, updated_at = datetime('now'), updated_by = 'system' WHERE id = ?",
+        (body.name, body.description, json.dumps(body.examples, ensure_ascii=False), game_type_id),
     )
     db.commit()
     row = db.execute("SELECT * FROM game_type WHERE id = ?", (game_type_id,)).fetchone()

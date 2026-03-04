@@ -6,9 +6,13 @@ from typing import Optional
 
 class GameTypeCreate(BaseModel):
     name: str = Field(..., min_length=1)
+    description: str = ""
+    examples: list[str] = []
 
 class GameTypeUpdate(BaseModel):
     name: str = Field(..., min_length=1)
+    description: str = ""
+    examples: list[str] = []
 
 class GameTypeSortRequest(BaseModel):
     ids: list[int]
@@ -22,6 +26,8 @@ class PosterOut(BaseModel):
 class GameTypeOut(BaseModel):
     id: int
     name: str
+    description: str = ""
+    examples: list[str] = []
     sort_order: int
     created_at: str
     updated_at: str
@@ -68,23 +74,26 @@ class RoleGroupOut(BaseModel):
 class ToolCellCreate(BaseModel):
     game_type_id: int
     role_id: int
-    tool_name: str = Field(..., min_length=1)
-    maturity_score: int = Field(..., ge=0, le=100)
-    official_url: str = Field(..., min_length=1)
-    short_desc: str = Field(..., min_length=1)
+    is_na: bool = False
+    tool_name: str = ""
+    maturity_score: int = Field(0, ge=0, le=100)
+    official_url: str = ""
+    short_desc: str = ""
     report_url: Optional[str] = None
 
 class ToolCellUpdate(BaseModel):
-    tool_name: str = Field(..., min_length=1)
-    maturity_score: int = Field(..., ge=0, le=100)
-    official_url: str = Field(..., min_length=1)
-    short_desc: str = Field(..., min_length=1)
+    is_na: bool = False
+    tool_name: str = ""
+    maturity_score: int = Field(0, ge=0, le=100)
+    official_url: str = ""
+    short_desc: str = ""
     report_url: Optional[str] = None
 
 class ToolCellOut(BaseModel):
     id: int
     game_type_id: int
     role_id: int
+    is_na: bool = False
     tool_name: str
     maturity_score: int
     official_url: str
