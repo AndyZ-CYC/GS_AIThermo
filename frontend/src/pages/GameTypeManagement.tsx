@@ -26,7 +26,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const inputCls =
-  "bg-bg-surface border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
+  "bg-bg-surface border border-border rounded-md px-3 py-2 text-base text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
 
 export default function GameTypeManagement() {
   const { data: gameTypes = [], isLoading } = useGameTypes();
@@ -60,8 +60,8 @@ export default function GameTypeManagement() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-xl font-bold text-text-primary mb-4">游戏类型管理</h1>
+    <div>
+      <h2 className="text-2xl font-bold text-text-primary mb-4">游戏类型管理</h2>
 
       <div className="flex gap-2 mb-6">
         <input
@@ -74,7 +74,7 @@ export default function GameTypeManagement() {
         <button
           onClick={handleCreate}
           disabled={!newName.trim()}
-          className="px-4 py-1.5 bg-accent text-white text-sm rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
+          className="px-4 py-2 bg-accent text-white text-sm rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
         >
           新增
         </button>
@@ -204,7 +204,7 @@ function SortableGameTypeCard({
             </button>
           </div>
         ) : (
-          <span className="flex-1 text-sm font-medium text-text-primary">
+          <span className="flex-1 text-base font-medium text-text-primary">
             {gameType.name}
           </span>
         )}
@@ -213,19 +213,19 @@ function SortableGameTypeCard({
           <div className="flex gap-1">
             <button
               onClick={onEdit}
-              className="text-xs text-accent hover:text-accent-hover px-2 py-1 transition-colors"
+              className="text-sm text-accent hover:text-accent-hover px-2 py-1 transition-colors"
             >
               编辑
             </button>
             <button
               onClick={() => fileRef.current?.click()}
-              className="text-xs text-text-secondary hover:text-text-primary px-2 py-1 transition-colors"
+              className="text-sm text-text-secondary hover:text-text-primary px-2 py-1 transition-colors"
             >
               上传海报
             </button>
             <button
               onClick={handleDelete}
-              className="text-xs text-red-400 hover:text-red-300 px-2 py-1 transition-colors"
+              className="text-sm text-red-400 hover:text-red-300 px-2 py-1 transition-colors"
             >
               删除
             </button>

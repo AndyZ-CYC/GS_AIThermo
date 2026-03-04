@@ -28,7 +28,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const inputCls =
-  "bg-bg-surface border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
+  "bg-bg-surface border border-border rounded-md px-3 py-2 text-base text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
 
 export default function RoleManagement() {
   const { data: roleGroups = [], isLoading } = useRoleGroups();
@@ -60,8 +60,8 @@ export default function RoleManagement() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-xl font-bold text-text-primary mb-4">工种管理</h1>
+    <div>
+      <h2 className="text-2xl font-bold text-text-primary mb-4">工种管理</h2>
 
       <div className="flex gap-2 mb-6">
         <input
@@ -74,7 +74,7 @@ export default function RoleManagement() {
         <button
           onClick={handleCreateGroup}
           disabled={!newGroupName.trim()}
-          className="px-4 py-1.5 bg-accent text-white text-sm rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
+          className="px-4 py-2 bg-accent text-white text-sm rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
         >
           新增大类
         </button>
@@ -204,7 +204,7 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
             </button>
           </div>
         ) : (
-          <span className="flex-1 font-semibold text-sm text-text-primary">
+          <span className="flex-1 font-semibold text-base text-text-primary">
             {group.name}
           </span>
         )}
@@ -216,13 +216,13 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
                 setEditing(true);
                 setEditName(group.name);
               }}
-              className="text-xs text-accent hover:text-accent-hover px-2 py-1 transition-colors"
+              className="text-sm text-accent hover:text-accent-hover px-2 py-1 transition-colors"
             >
               编辑
             </button>
             <button
               onClick={handleDelete}
-              className="text-xs text-red-400 hover:text-red-300 px-2 py-1 transition-colors"
+              className="text-sm text-red-400 hover:text-red-300 px-2 py-1 transition-colors"
             >
               删除
             </button>
@@ -306,7 +306,7 @@ function SortableRoleRow({ role }: { role: Role }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-2 py-1 px-2 rounded hover:bg-bg-elevated/50 transition-colors"
+      className="group flex items-center gap-2 py-1.5 px-2 rounded hover:bg-bg-elevated/50 transition-colors"
     >
       <span
         {...attributes}
@@ -327,20 +327,20 @@ function SortableRoleRow({ role }: { role: Role }) {
           />
           <button
             onClick={handleSave}
-            className="text-xs text-accent hover:text-accent-hover transition-colors"
+            className="text-sm text-accent hover:text-accent-hover transition-colors"
           >
             保存
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+            className="text-sm text-text-muted hover:text-text-secondary transition-colors"
           >
             取消
           </button>
         </div>
       ) : (
         <>
-          <span className="flex-1 text-sm text-text-secondary">
+          <span className="flex-1 text-base text-text-secondary">
             {role.name}
           </span>
           <button
@@ -348,13 +348,13 @@ function SortableRoleRow({ role }: { role: Role }) {
               setEditing(true);
               setEditName(role.name);
             }}
-            className="text-xs text-accent px-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-sm text-accent px-1 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             编辑
           </button>
           <button
             onClick={handleDelete}
-            className="text-xs text-red-400 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-sm text-red-400 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             删除
           </button>

@@ -45,7 +45,7 @@ export default function MatrixOverview() {
     return (
       <div className="p-12 text-center text-text-secondary">
         <p className="text-lg mb-2">尚未添加任何数据</p>
-        <p className="text-text-muted">请先前往「游戏类型管理」和「工种管理」添加数据</p>
+        <p className="text-text-muted">请先前往「数据管理」添加游戏类型和工种</p>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function MatrixOverview() {
   return (
     <>
       <div className="mb-5 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4 text-sm text-text-secondary">
+        <div className="flex items-center gap-4 text-base text-text-secondary">
           <span>{gameTypes.length} 个游戏类型</span>
           <span className="text-text-muted">·</span>
           <span>{totalRoles} 个工种</span>
@@ -69,7 +69,7 @@ export default function MatrixOverview() {
         <div
           className="grid gap-1.5"
           style={{
-            gridTemplateColumns: `200px repeat(${gameTypes.length}, minmax(130px, 1fr))`,
+            gridTemplateColumns: `200px repeat(${gameTypes.length}, minmax(140px, 1fr))`,
           }}
         >
           {/* Header row */}
@@ -115,7 +115,7 @@ export default function MatrixOverview() {
 
 function MaturityLegend() {
   return (
-    <div className="flex items-center gap-3 text-xs">
+    <div className="flex items-center gap-3 text-sm">
       {allTiers.map((t) => (
         <div key={t.level} className="flex items-center gap-1.5">
           <span
@@ -136,23 +136,28 @@ function MaturityLegend() {
 }
 
 function GameTypeHeader({ gameType }: { gameType: GameType }) {
+  const hasPosters = gameType.posters.length > 0;
   return (
-    <div className="flex flex-col items-center justify-end gap-1.5 px-2 py-3 rounded-lg bg-bg-surface/60">
-      <span className="text-sm font-medium text-text-primary text-center leading-tight">
+    <div
+      className={`flex flex-col items-center gap-2 px-2 py-4 rounded-lg bg-bg-surface/60 ${
+        hasPosters ? "justify-between" : "justify-center"
+      }`}
+    >
+      <span className="text-base font-medium text-text-primary text-center leading-tight">
         {gameType.name}
       </span>
-      {gameType.posters.length > 0 && (
-        <div className="flex justify-center -space-x-1.5">
+      {hasPosters && (
+        <div className="flex justify-center -space-x-2">
           {gameType.posters.slice(0, 3).map((p) => (
             <img
               key={p.id}
               src={p.file_path}
-              className="w-7 h-7 rounded object-cover border border-border"
+              className="w-12 h-12 rounded-md object-cover border border-border"
               alt=""
             />
           ))}
           {gameType.posters.length > 3 && (
-            <span className="w-7 h-7 rounded bg-bg-elevated flex items-center justify-center text-[10px] text-text-muted border border-border">
+            <span className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
               +{gameType.posters.length - 3}
             </span>
           )}
@@ -183,21 +188,23 @@ function RoleGroupRows({
 }) {
   return (
     <>
-      {/* Group header spanning full width */}
+      {/* Group header: spans full width, inner content sticky left */}
       <div
-        className="cursor-pointer select-none rounded-md bg-bg-elevated/60 px-4 py-2 flex items-center gap-2 hover:bg-bg-elevated transition-colors"
+        className="cursor-pointer select-none rounded-md bg-bg-elevated/60 hover:bg-bg-elevated transition-colors"
         style={{ gridColumn: `1 / ${colCount + 1}` }}
         onClick={onToggle}
       >
-        <span className="text-text-muted text-xs">
-          {isCollapsed ? "▶" : "▼"}
-        </span>
-        <span className="text-sm font-medium text-text-primary">
-          {group.name}
-        </span>
-        <span className="text-xs text-text-muted ml-1">
-          {group.roles.length} 个子工种
-        </span>
+        <div className="sticky left-0 w-fit px-4 py-2.5 flex items-center gap-2">
+          <span className="text-text-muted text-sm">
+            {isCollapsed ? "▶" : "▼"}
+          </span>
+          <span className="text-base font-medium text-text-primary">
+            {group.name}
+          </span>
+          <span className="text-sm text-text-muted ml-1">
+            {group.roles.length} 个子工种
+          </span>
+        </div>
       </div>
 
       {!isCollapsed &&
@@ -234,7 +241,7 @@ function RoleRow({
   return (
     <>
       <div className="sticky left-0 z-10 bg-bg-base flex items-center pl-5 pr-2 rounded-md">
-        <span className="text-sm text-text-secondary truncate">{roleName}</span>
+        <span className="text-sm text-text-primary/80 truncate">{roleName}</span>
       </div>
       {gameTypes.map((gt) => {
         const cell = cellMap.get(`${gt.id}-${roleId}`);
@@ -330,7 +337,7 @@ function CellCard({
         ) : (
           <PlaceholderIcon className="w-5 h-5 shrink-0" />
         )}
-        <span className="text-xs font-medium text-text-primary truncate">
+        <span className="text-sm font-medium text-text-primary truncate">
           {cell.tool_name}
         </span>
       </div>
@@ -359,22 +366,22 @@ function MatrixSkeleton() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex gap-4">
-          <div className={`${shimmer} h-4 w-24`} />
-          <div className={`${shimmer} h-4 w-20`} />
-          <div className={`${shimmer} h-4 w-28`} />
+          <div className={`${shimmer} h-5 w-28`} />
+          <div className={`${shimmer} h-5 w-24`} />
+          <div className={`${shimmer} h-5 w-32`} />
         </div>
         <div className="flex gap-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className={`${shimmer} h-4 w-12`} />
+            <div key={i} className={`${shimmer} h-5 w-14`} />
           ))}
         </div>
       </div>
       <div className="grid gap-1.5" style={{ gridTemplateColumns: "200px repeat(5, 1fr)" }}>
-        <div className={`${shimmer} h-14`} />
+        <div className={`${shimmer} h-20`} />
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className={`${shimmer} h-14`} />
+          <div key={i} className={`${shimmer} h-20`} />
         ))}
-        <div className={`${shimmer} h-8`} style={{ gridColumn: "1 / -1" }} />
+        <div className={`${shimmer} h-10`} style={{ gridColumn: "1 / -1" }} />
         {[1, 2, 3].map((row) => (
           <div key={row} className="contents">
             <div className={`${shimmer} h-14`} />
@@ -383,7 +390,7 @@ function MatrixSkeleton() {
             ))}
           </div>
         ))}
-        <div className={`${shimmer} h-8`} style={{ gridColumn: "1 / -1" }} />
+        <div className={`${shimmer} h-10`} style={{ gridColumn: "1 / -1" }} />
         {[1, 2].map((row) => (
           <div key={row} className="contents">
             <div className={`${shimmer} h-14`} />

@@ -1,12 +1,10 @@
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import MatrixOverview from "./pages/MatrixOverview";
-import GameTypeManagement from "./pages/GameTypeManagement";
-import RoleManagement from "./pages/RoleManagement";
+import DataManagement from "./pages/DataManagement";
 
 const navItems = [
   { path: "/", label: "矩阵总览" },
-  { path: "/game-types", label: "游戏类型管理" },
-  { path: "/roles", label: "工种管理" },
+  { path: "/manage", label: "数据管理" },
 ];
 
 export default function App() {
@@ -24,7 +22,7 @@ export default function App() {
               <Link
                 key={n.path}
                 to={n.path}
-                className={`relative text-sm tracking-wider py-4 transition-colors duration-200 ${
+                className={`relative text-base tracking-wider py-4 transition-colors duration-200 ${
                   active
                     ? "text-text-primary font-medium"
                     : "text-text-secondary hover:text-text-primary"
@@ -40,11 +38,12 @@ export default function App() {
         </div>
       </nav>
       <main className="max-w-[1600px] mx-auto p-6">
-        <Routes>
-          <Route path="/" element={<MatrixOverview />} />
-          <Route path="/game-types" element={<GameTypeManagement />} />
-          <Route path="/roles" element={<RoleManagement />} />
-        </Routes>
+        <div key={location.pathname} className="animate-page-in">
+          <Routes>
+            <Route path="/" element={<MatrixOverview />} />
+            <Route path="/manage" element={<DataManagement />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );
