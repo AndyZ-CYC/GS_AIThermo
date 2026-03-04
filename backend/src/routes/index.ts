@@ -7,6 +7,7 @@ import roleRoutes from './roleRoutes.js';
 import toolCellRoutes from './toolCellRoutes.js';
 import dimensionRoutes from './dimensionRoutes.js';
 import maturityRoutes from './maturityRoutes.js';
+import matrixRoutes from './matrixRoutes.js';
 
 const router = Router();
 
@@ -51,5 +52,8 @@ router.use('/dimensions', dimensionRoutes);
 
 // 成熟度配置路由
 router.use('/maturity-configs', maturityRoutes);
+
+// 矩阵数据路由（一次性获取所有数据用于渲染）
+router.use('/matrix', matrixRoutes);
 
 export default router;
