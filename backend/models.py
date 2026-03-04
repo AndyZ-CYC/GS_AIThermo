@@ -90,5 +90,6 @@ class ToolCellOut(BaseModel):
     official_url: str
     short_desc: str
     report_url: Optional[str]
+    icon_path: Optional[str]
     created_at: str
     updated_at: str

@@ -5,6 +5,7 @@ from pathlib import Path
 DB_DIR = Path(__file__).parent / "data"
 DB_PATH = DB_DIR / "app.db"
 UPLOAD_DIR = DB_DIR / "uploads" / "posters"
+ICON_DIR = DB_DIR / "uploads" / "icons"
 
 
 def get_db() -> sqlite3.Connection:
@@ -18,6 +19,7 @@ def get_db() -> sqlite3.Connection:
 def init_db():
     DB_DIR.mkdir(parents=True, exist_ok=True)
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    ICON_DIR.mkdir(parents=True, exist_ok=True)
 
     conn = get_db()
     conn.executescript("""
@@ -69,6 +71,7 @@ def init_db():
             official_url    TEXT    NOT NULL,
             short_desc      TEXT    NOT NULL,
             report_url      TEXT,
+            icon_path       TEXT,
             created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             updated_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             created_by      TEXT    DEFAULT 'system',
@@ -83,4 +86,11 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_role_group ON role(role_group_id);
         CREATE INDEX IF NOT EXISTS idx_poster_game_type ON game_type_poster(game_type_id);
     """)
+
+    # Migrate: add icon_path if missing (safe for existing DBs)
+    cols = [r["name"] for r in conn.execute("PRAGMA table_info(tool_cell)").fetchall()]
+    if "icon_path" not in cols:
+        conn.execute("ALTER TABLE tool_cell ADD COLUMN icon_path TEXT")
+        conn.commit()
+
     conn.close()

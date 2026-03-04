@@ -1,7 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ToolCell, GameType, RoleGroup } from "../types";
 import { getMaturityTier } from "../utils/maturity";
-import { useCreateToolCell, useUpdateToolCell, useDeleteToolCell } from "../hooks/useToolCells";
+import {
+  useCreateToolCell,
+  useUpdateToolCell,
+  useDeleteToolCell,
+  useUploadIcon,
+  useDeleteIcon,
+} from "../hooks/useToolCells";
 
 interface Props {
   mode: "view" | "create" | "edit";
@@ -27,6 +33,8 @@ export default function ToolCellModal({
   const createMutation = useCreateToolCell();
   const updateMutation = useUpdateToolCell();
   const deleteMutation = useDeleteToolCell();
+  const uploadIconMut = useUploadIcon();
+  const deleteIconMut = useDeleteIcon();
 
   const [form, setForm] = useState({
     tool_name: cell?.tool_name ?? "",
@@ -70,56 +78,114 @@ export default function ToolCellModal({
     } else if (mode === "edit" && cell) {
       await updateMutation.mutateAsync({ id: cell.id, ...data });
     }
-    onClose();
+    handleAnimatedClose();
   };
 
   const handleDelete = async () => {
     if (cell && confirm("确定要删除这个工具卡片吗？")) {
       await deleteMutation.mutateAsync(cell.id);
-      onClose();
+      handleAnimatedClose();
     }
   };
 
+  const iconFileRef = useRef<HTMLInputElement>(null);
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0] && cell) {
+      await uploadIconMut.mutateAsync({ cellId: cell.id, file: e.target.files[0] });
+    }
+  };
+  const handleIconDelete = async () => {
+    if (cell) await deleteIconMut.mutateAsync(cell.id);
+  };
+
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  const handleAnimatedClose = () => {
+    setVisible(false);
+    setTimeout(onClose, 180);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={handleAnimatedClose}
+    >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+        className={`bg-bg-elevated rounded-xl w-full max-w-lg mx-4 overflow-hidden transition-all duration-200 ${
+          visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+        }`}
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-text-primary">
             {mode === "create" ? "添加工具卡片" : mode === "edit" ? "编辑工具卡片" : "工具详情"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button
+            onClick={handleAnimatedClose}
+            className="text-text-muted hover:text-text-secondary text-xl leading-none transition-colors"
+          >
+            &times;
+          </button>
         </div>
 
+        {/* Body */}
         <div className="px-6 py-4 space-y-4">
-          <div className="flex gap-4 text-sm text-gray-500">
-            <span>游戏类型：<strong className="text-gray-700">{gtName}</strong></span>
-            <span>工种：<strong className="text-gray-700">{roleName}</strong></span>
+          <div className="flex gap-4 text-sm text-text-secondary">
+            <span>
+              游戏类型：<strong className="text-text-primary">{gtName}</strong>
+            </span>
+            <span>
+              工种：<strong className="text-text-primary">{roleName}</strong>
+            </span>
           </div>
 
           {mode === "view" && cell ? (
-            <ViewContent cell={cell} tier={tier} />
+            <ViewContent
+              cell={cell}
+              tier={tier}
+              onIconUpload={() => iconFileRef.current?.click()}
+              onIconDelete={handleIconDelete}
+            />
           ) : (
             <EditForm form={form} setForm={setForm} tier={tier} />
           )}
+          <input
+            ref={iconFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleIconUpload}
+          />
         </div>
 
-        <div className="px-6 py-3 border-t border-gray-200 flex justify-between">
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-border flex justify-between">
           {mode === "view" ? (
             <>
               <button
                 onClick={handleDelete}
-                className="text-sm text-red-500 hover:text-red-700"
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
               >
                 删除
               </button>
               <div className="flex gap-2">
-                <button onClick={onClose} className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md">
+                <button
+                  onClick={handleAnimatedClose}
+                  className="px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface rounded-md transition-colors"
+                >
                   关闭
                 </button>
-                <button onClick={onSwitchEdit} className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                <button
+                  onClick={onSwitchEdit}
+                  className="px-4 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent-hover transition-colors"
+                >
                   编辑
                 </button>
               </div>
@@ -128,13 +194,16 @@ export default function ToolCellModal({
             <>
               <div />
               <div className="flex gap-2">
-                <button onClick={onClose} className="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md">
+                <button
+                  onClick={handleAnimatedClose}
+                  className="px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface rounded-md transition-colors"
+                >
                   取消
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!form.tool_name || !form.official_url || !form.short_desc}
-                  className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
                 >
                   保存
                 </button>
@@ -147,37 +216,101 @@ export default function ToolCellModal({
   );
 }
 
-function ViewContent({ cell, tier }: { cell: ToolCell; tier: ReturnType<typeof getMaturityTier> }) {
+function ViewContent({
+  cell,
+  tier,
+  onIconUpload,
+  onIconDelete,
+}: {
+  cell: ToolCell;
+  tier: ReturnType<typeof getMaturityTier>;
+  onIconUpload: () => void;
+  onIconDelete: () => void;
+}) {
   return (
     <div className="space-y-3">
-      <div>
-        <span className="text-xs text-gray-500">工具名称</span>
-        <p className="font-semibold text-gray-800">{cell.tool_name}</p>
-      </div>
-      <div>
-        <span className="text-xs text-gray-500">成熟度</span>
-        <div className="flex items-center gap-2 mt-0.5">
-          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />
-          <span className="text-sm font-medium">{cell.maturity_score} 分 — {tier.label}</span>
+      {/* Icon */}
+      <div className="flex items-center gap-3">
+        {cell.icon_path ? (
+          <div className="relative group">
+            <img
+              src={cell.icon_path}
+              alt=""
+              className="w-12 h-12 rounded-lg object-cover border border-border"
+            />
+            <button
+              onClick={onIconDelete}
+              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            >
+              &times;
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onIconUpload}
+            className="w-12 h-12 rounded-lg border border-dashed border-text-muted/40 flex items-center justify-center hover:border-accent/60 transition-colors group"
+          >
+            <svg
+              className="w-5 h-5 text-text-muted group-hover:text-accent transition-colors"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+              />
+            </svg>
+          </button>
+        )}
+        <div>
+          <p className="font-semibold text-text-primary">{cell.tool_name}</p>
+          <button
+            onClick={cell.icon_path ? undefined : onIconUpload}
+            className="text-xs text-text-muted hover:text-accent transition-colors"
+          >
+            {cell.icon_path ? "已上传 Icon" : "上传 Icon"}
+          </button>
         </div>
       </div>
       <div>
-        <span className="text-xs text-gray-500">官网链接</span>
+        <span className="text-xs text-text-muted">成熟度</span>
+        <div className="flex items-center gap-2 mt-0.5">
+          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />
+          <span className="text-sm font-medium text-text-primary">
+            {cell.maturity_score} 分 — {tier.label}
+          </span>
+        </div>
+      </div>
+      <div>
+        <span className="text-xs text-text-muted">官网链接</span>
         <p>
-          <a href={cell.official_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm break-all">
+          <a
+            href={cell.official_url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent hover:text-accent-hover text-sm break-all transition-colors"
+          >
             {cell.official_url}
           </a>
         </p>
       </div>
       <div>
-        <span className="text-xs text-gray-500">简短描述</span>
-        <p className="text-sm text-gray-700">{cell.short_desc}</p>
+        <span className="text-xs text-text-muted">简短描述</span>
+        <p className="text-sm text-text-secondary">{cell.short_desc}</p>
       </div>
       {cell.report_url && (
         <div>
-          <span className="text-xs text-gray-500">报告链接</span>
+          <span className="text-xs text-text-muted">报告链接</span>
           <p>
-            <a href={cell.report_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm break-all">
+            <a
+              href={cell.report_url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent hover:text-accent-hover text-sm break-all transition-colors"
+            >
               {cell.report_url}
             </a>
           </p>
@@ -192,26 +325,35 @@ function EditForm({
   setForm,
   tier,
 }: {
-  form: { tool_name: string; maturity_score: number; official_url: string; short_desc: string; report_url: string };
+  form: {
+    tool_name: string;
+    maturity_score: number;
+    official_url: string;
+    short_desc: string;
+    report_url: string;
+  };
   setForm: React.Dispatch<React.SetStateAction<typeof form>>;
   tier: ReturnType<typeof getMaturityTier>;
 }) {
   const upd = (field: string, value: string | number) =>
     setForm((f) => ({ ...f, [field]: value }));
 
+  const inputCls =
+    "mt-0.5 w-full bg-bg-surface border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
+
   return (
     <div className="space-y-3">
       <label className="block">
-        <span className="text-xs text-gray-500">工具名称 *</span>
+        <span className="text-xs text-text-muted">工具名称 *</span>
         <input
-          className="mt-0.5 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className={inputCls}
           value={form.tool_name}
           onChange={(e) => upd("tool_name", e.target.value)}
         />
       </label>
 
       <label className="block">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-text-muted">
           成熟度分数 *：{form.maturity_score}
         </span>
         <div className="flex items-center gap-3 mt-1">
@@ -221,19 +363,19 @@ function EditForm({
             max={100}
             value={form.maturity_score}
             onChange={(e) => upd("maturity_score", Number(e.target.value))}
-            className="flex-1"
+            className="flex-1 accent-accent"
           />
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />
-            <span className="text-sm font-medium">{tier.label}</span>
+            <span className="text-sm font-medium text-text-primary">{tier.label}</span>
           </div>
         </div>
       </label>
 
       <label className="block">
-        <span className="text-xs text-gray-500">官网链接 *</span>
+        <span className="text-xs text-text-muted">官网链接 *</span>
         <input
-          className="mt-0.5 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className={inputCls}
           value={form.official_url}
           onChange={(e) => upd("official_url", e.target.value)}
           placeholder="https://..."
@@ -241,9 +383,9 @@ function EditForm({
       </label>
 
       <label className="block">
-        <span className="text-xs text-gray-500">简短描述 *</span>
+        <span className="text-xs text-text-muted">简短描述 *</span>
         <textarea
-          className="mt-0.5 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+          className={`${inputCls} resize-none`}
           rows={3}
           value={form.short_desc}
           onChange={(e) => upd("short_desc", e.target.value)}
@@ -251,9 +393,9 @@ function EditForm({
       </label>
 
       <label className="block">
-        <span className="text-xs text-gray-500">报告链接（可选）</span>
+        <span className="text-xs text-text-muted">报告链接（可选）</span>
         <input
-          className="mt-0.5 w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className={inputCls}
           value={form.report_url}
           onChange={(e) => upd("report_url", e.target.value)}
           placeholder="https://..."

@@ -2,17 +2,19 @@ export interface MaturityTier {
   level: number;
   label: string;
   color: string;
-  bgClass: string;
-  textClass: string;
+  cardBg: string;
+  indicatorColor: string;
 }
 
 const tiers: MaturityTier[] = [
-  { level: 1, label: "低",   color: "#ef4444", bgClass: "bg-red-500",        textClass: "text-white" },
-  { level: 2, label: "较低", color: "#f97316", bgClass: "bg-orange-500",     textClass: "text-white" },
-  { level: 3, label: "中",   color: "#eab308", bgClass: "bg-yellow-500",     textClass: "text-black" },
-  { level: 4, label: "较高", color: "#84cc16", bgClass: "bg-lime-500",       textClass: "text-black" },
-  { level: 5, label: "高",   color: "#22c55e", bgClass: "bg-green-500",      textClass: "text-white" },
+  { level: 1, label: "低",   color: "#c0392b", cardBg: "rgba(192,57,43,0.22)",   indicatorColor: "#e74c3c" },
+  { level: 2, label: "较低", color: "#e67e22", cardBg: "rgba(230,126,34,0.22)",  indicatorColor: "#f39c12" },
+  { level: 3, label: "中",   color: "#f1c40f", cardBg: "rgba(241,196,15,0.18)",  indicatorColor: "#f1c40f" },
+  { level: 4, label: "较高", color: "#7fb347", cardBg: "rgba(127,179,71,0.22)",  indicatorColor: "#8bc34a" },
+  { level: 5, label: "高",   color: "#27ae60", cardBg: "rgba(39,174,96,0.25)",   indicatorColor: "#2ecc71" },
 ];
+
+export const allTiers = tiers;
 
 export function getMaturityTier(score: number): MaturityTier {
   if (score <= 20) return tiers[0];

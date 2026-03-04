@@ -25,6 +25,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+const inputCls =
+  "bg-bg-surface border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
+
 export default function GameTypeManagement() {
   const { data: gameTypes = [], isLoading } = useGameTypes();
   const createMut = useCreateGameType();
@@ -33,7 +36,9 @@ export default function GameTypeManagement() {
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -50,15 +55,17 @@ export default function GameTypeManagement() {
     sortMut.mutate(newOrder.map((g) => g.id));
   };
 
-  if (isLoading) return <div className="p-8 text-gray-500">加载中...</div>;
+  if (isLoading) {
+    return <div className="p-8 text-text-secondary">加载中...</div>;
+  }
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-xl font-bold text-gray-800 mb-4">游戏类型管理</h1>
+      <h1 className="text-xl font-bold text-text-primary mb-4">游戏类型管理</h1>
 
       <div className="flex gap-2 mb-6">
         <input
-          className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className={`flex-1 ${inputCls}`}
           placeholder="输入新的游戏类型名称..."
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
@@ -67,14 +74,21 @@ export default function GameTypeManagement() {
         <button
           onClick={handleCreate}
           disabled={!newName.trim()}
-          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-1.5 bg-accent text-white text-sm rounded-md hover:bg-accent-hover disabled:opacity-40 transition-colors"
         >
           新增
         </button>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={gameTypes.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={gameTypes.map((g) => g.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="space-y-2">
             {gameTypes.map((gt) => (
               <SortableGameTypeCard
@@ -90,7 +104,9 @@ export default function GameTypeManagement() {
       </DndContext>
 
       {gameTypes.length === 0 && (
-        <p className="text-gray-400 text-sm text-center py-8">暂无游戏类型，请添加</p>
+        <p className="text-text-muted text-sm text-center py-8">
+          暂无游戏类型，请添加
+        </p>
       )}
     </div>
   );
@@ -107,8 +123,12 @@ function SortableGameTypeCard({
   onEdit: () => void;
   onCancelEdit: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: gameType.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: gameType.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const updateMut = useUpdateGameType();
   const deleteMut = useDeleteGameType();
@@ -128,24 +148,35 @@ function SortableGameTypeCard({
     try {
       await deleteMut.mutateAsync(gameType.id);
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: { message?: string } } } })?.response?.data?.detail;
+      const detail = (
+        err as {
+          response?: { data?: { detail?: { message?: string } } };
+        }
+      )?.response?.data?.detail;
       alert(detail?.message ?? "删除失败");
     }
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      await uploadMut.mutateAsync({ gameTypeId: gameType.id, files: e.target.files });
+      await uploadMut.mutateAsync({
+        gameTypeId: gameType.id,
+        files: e.target.files,
+      });
     }
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-bg-surface border border-border rounded-lg p-3"
+    >
       <div className="flex items-center gap-2">
         <span
           {...attributes}
           {...listeners}
-          className="cursor-grab text-gray-400 hover:text-gray-600 select-none"
+          className="cursor-grab text-text-muted hover:text-text-secondary select-none"
         >
           ⠿
         </span>
@@ -153,36 +184,72 @@ function SortableGameTypeCard({
         {isEditing ? (
           <div className="flex-1 flex gap-2">
             <input
-              className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className={`flex-1 ${inputCls}`}
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
               autoFocus
             />
-            <button onClick={handleSave} className="text-sm text-blue-600 hover:text-blue-800">保存</button>
-            <button onClick={onCancelEdit} className="text-sm text-gray-500 hover:text-gray-700">取消</button>
+            <button
+              onClick={handleSave}
+              className="text-sm text-accent hover:text-accent-hover transition-colors"
+            >
+              保存
+            </button>
+            <button
+              onClick={onCancelEdit}
+              className="text-sm text-text-muted hover:text-text-secondary transition-colors"
+            >
+              取消
+            </button>
           </div>
         ) : (
-          <span className="flex-1 text-sm font-medium text-gray-800">{gameType.name}</span>
+          <span className="flex-1 text-sm font-medium text-text-primary">
+            {gameType.name}
+          </span>
         )}
 
         {!isEditing && (
           <div className="flex gap-1">
-            <button onClick={onEdit} className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1">编辑</button>
-            <button onClick={() => fileRef.current?.click()} className="text-xs text-green-600 hover:text-green-800 px-2 py-1">
+            <button
+              onClick={onEdit}
+              className="text-xs text-accent hover:text-accent-hover px-2 py-1 transition-colors"
+            >
+              编辑
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="text-xs text-text-secondary hover:text-text-primary px-2 py-1 transition-colors"
+            >
               上传海报
             </button>
-            <button onClick={handleDelete} className="text-xs text-red-500 hover:text-red-700 px-2 py-1">删除</button>
+            <button
+              onClick={handleDelete}
+              className="text-xs text-red-400 hover:text-red-300 px-2 py-1 transition-colors"
+            >
+              删除
+            </button>
           </div>
         )}
-        <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} />
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          onChange={handleUpload}
+        />
       </div>
 
       {gameType.posters.length > 0 && (
         <div className="flex gap-2 mt-2 flex-wrap">
           {gameType.posters.map((p) => (
             <div key={p.id} className="relative group">
-              <img src={p.file_path} className="w-16 h-16 object-cover rounded border" alt="" />
+              <img
+                src={p.file_path}
+                className="w-16 h-16 object-cover rounded border border-border"
+                alt=""
+              />
               <button
                 onClick={() => deletePosterMut.mutate(p.id)}
                 className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"

@@ -27,3 +27,16 @@ export const updateToolCell = (
 
 export const deleteToolCell = (id: number) =>
   client.delete(`/tool-cells/${id}`);
+
+export const uploadIcon = (cellId: number, file: File) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return client
+    .post<ToolCell>(`/tool-cells/${cellId}/icon`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data);
+};
+
+export const deleteIcon = (cellId: number) =>
+  client.delete<ToolCell>(`/tool-cells/${cellId}/icon`).then((r) => r.data);

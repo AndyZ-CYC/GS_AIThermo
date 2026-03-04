@@ -37,6 +37,7 @@ export interface ToolCell {
   official_url: string;
   short_desc: string;
   report_url: string | null;
+  icon_path: string | null;
   created_at: string;
   updated_at: string;
 }

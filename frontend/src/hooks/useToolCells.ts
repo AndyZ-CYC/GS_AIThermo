@@ -29,3 +29,20 @@ export function useDeleteToolCell() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["toolCells"] }),
   });
 }
+
+export function useUploadIcon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cellId, file }: { cellId: number; file: File }) =>
+      api.uploadIcon(cellId, file),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["toolCells"] }),
+  });
+}
+
+export function useDeleteIcon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cellId: number) => api.deleteIcon(cellId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["toolCells"] }),
+  });
+}

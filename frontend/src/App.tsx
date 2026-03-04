@@ -12,26 +12,34 @@ const navItems = [
 export default function App() {
   const location = useLocation();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-[1600px] mx-auto px-4 flex items-center h-14 gap-6">
-          <span className="font-bold text-lg text-gray-800 mr-4">AI 行业温度计</span>
-          {navItems.map((n) => (
-            <Link
-              key={n.path}
-              to={n.path}
-              className={`text-sm px-3 py-1.5 rounded-md transition-colors ${
-                location.pathname === n.path
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-            >
-              {n.label}
-            </Link>
-          ))}
+    <div className="min-h-screen">
+      <nav className="border-b border-border bg-bg-surface/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-[1600px] mx-auto px-6 flex items-center h-14 gap-8">
+          <span className="font-semibold text-lg text-text-primary tracking-wide mr-2">
+            AI 行业温度计
+          </span>
+          {navItems.map((n) => {
+            const active = location.pathname === n.path;
+            return (
+              <Link
+                key={n.path}
+                to={n.path}
+                className={`relative text-sm tracking-wider py-4 transition-colors duration-200 ${
+                  active
+                    ? "text-text-primary font-medium"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                {n.label}
+                {active && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-[2px] bg-accent rounded-full" />
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
-      <main className="max-w-[1600px] mx-auto p-4">
+      <main className="max-w-[1600px] mx-auto p-6">
         <Routes>
           <Route path="/" element={<MatrixOverview />} />
           <Route path="/game-types" element={<GameTypeManagement />} />
