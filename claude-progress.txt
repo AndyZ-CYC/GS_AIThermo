@@ -109,6 +109,26 @@
 - 使用 @tanstack/react-query 获取数据
 - 使用 lucide-react 图标库
 
+### Session 7 - 2026-03-04
+**Agent**: Claude (Claude Code)
+**工作内容**:
+- **完成 F004 - 游戏类型 CRUD API**
+- 发现并修复路由顺序问题：
+  - `PUT /api/game-types/sort` 必须在 `PUT /api/game-types/:id` 之前定义
+  - 否则 "sort" 会被当作 :id 参数匹配
+- 验证所有 API 端点正常工作：
+  - GET /api/game-types - 获取列表（含海报和维度取值）
+  - GET /api/game-types/:id - 获取单个
+  - POST /api/game-types - 创建（支持维度取值关联）
+  - PUT /api/game-types/:id - 更新
+  - DELETE /api/game-types/:id - 软删除（含级联检查）
+  - PUT /api/game-types/sort - 批量排序
+- API 实现特性：
+  - 软删除机制
+  - 级联依赖检查（删除前检查 tool_cells 和 posters）
+  - 维度取值覆盖式更新
+  - 事务性批量排序
+
 **技术决策**:
 - 前端框架：React + TypeScript + Vite
 - 后端框架：Node.js + Express + TypeScript
@@ -116,9 +136,9 @@
 - 图标库：lucide-react
 - 样式方案：CSS Modules（不使用 Tailwind CSS，使用原生 CSS 变量）
 
-**当前状态**: F009 完成，M1 里程碑全部完成
+**当前状态**: F004 完成，M2 里程碑进行中
 **GitHub 仓库**: https://github.com/AndyZ-CYC/GS_AIThermo
-**下一步**: F004 - 游戏类型 CRUD API（M2 内优先级最高）
+**下一步**: F005 - 工种管理 CRUD API（M2 内下一个任务）
 
 ---
 
@@ -127,7 +147,7 @@
 | 里程碑 | 状态 | 完成日期 |
 |--------|------|----------|
 | M1: 基础数据模型 + 矩阵总览页 | ✅ 完成 | 2026-03-04 |
-| M2: GameType/Role CRUD + 排序 | 未开始 | - |
+| M2: GameType/Role CRUD + 排序 | 🔄 进行中 | - |
 | M3: ToolCell CRUD + 详情弹窗 | 未开始 | - |
 | M4: 海报上传/管理 | 未开始 | - |
 | M5: 维度体系管理 | 未开始 | - |
@@ -141,8 +161,9 @@
 | F001 初始化项目结构和依赖 | ✅ 完成 | 前后端项目、数据库配置、开发脚本 |
 | F002 创建数据库模型和迁移 | ✅ 完成 | 9 张表 + 7 个索引 + 测试数据 |
 | F003 实现基础 API 框架 | ✅ 完成 | CORS + 错误处理 + 请求验证中间件 |
+| F004 游戏类型 CRUD API | ✅ 完成 | GET/POST/PUT/DELETE + 排序 + 级联检查 |
 | F009 矩阵总览页 | ✅ 完成 | 热成像风格 + 响应式布局 |
-| F004-F016 | 🔲 未开始 | - |
+| F005-F008,F010-F016 | 🔲 未开始 | - |
 
 ---
 

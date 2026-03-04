@@ -24,6 +24,13 @@ router.post('/',
   createGameType
 );
 
+// PUT /api/game-types/sort - 批量更新排序（必须在 /:id 之前）
+router.put('/sort',
+  requireBody('ids'),
+  validateNonEmptyArray('ids'),
+  reorderGameTypes
+);
+
 // PUT /api/game-types/:id - 更新游戏类型
 router.put('/:id',
   requireParams('id'),
@@ -33,12 +40,5 @@ router.put('/:id',
 
 // DELETE /api/game-types/:id - 删除游戏类型
 router.delete('/:id', requireParams('id'), deleteGameType);
-
-// PUT /api/game-types/sort - 批量更新排序
-router.put('/sort',
-  requireBody('ids'),
-  validateNonEmptyArray('ids'),
-  reorderGameTypes
-);
 
 export default router;
