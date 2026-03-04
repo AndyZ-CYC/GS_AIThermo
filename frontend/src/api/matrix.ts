@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { MatrixData, ApiResponse } from '../types';
+import type { MatrixData, ApiResponse } from '../types';
 
 export const matrixApi = {
   // 获取矩阵数据
