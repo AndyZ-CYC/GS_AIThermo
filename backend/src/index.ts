@@ -16,9 +16,24 @@ const PORT = process.env.PORT || 3001;
 // 初始化数据库
 initDatabase();
 
-// CORS 配置
+// CORS 配置 - 允许多个前端端口
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Vite 默认端口
+  origin: (origin, callback) => {
+    // 允许无origin的请求（如移动端应用、curl等）
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
