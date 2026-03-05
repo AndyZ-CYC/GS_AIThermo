@@ -185,12 +185,12 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
               <img
                 key={p.id}
                 src={p.file_path}
-                className="w-12 h-12 rounded-md object-cover border border-border"
+                className="w-12 h-16 rounded-md object-cover border border-border"
                 alt=""
               />
             ))}
             {gameType.posters.length > 3 && (
-              <span className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
+              <span className="w-12 h-16 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
                 +{gameType.posters.length - 3}
               </span>
             )}
@@ -212,7 +212,7 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
                 {gameType.examples.map((ex) => (
                   <span
                     key={ex}
-                    className="inline-block px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
+                    className="inline-block px-2 py-0.5 text-xs rounded-full bg-bg-surface text-text-secondary border border-border shadow-sm"
                   >
                     {ex}
                   </span>
@@ -233,7 +233,7 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
                   >
                     <img
                       src={p.file_path}
-                      className="w-full h-24 rounded object-cover border border-border/50 hover:border-accent/70 transition-colors"
+                      className="w-full aspect-[3/4] rounded object-cover border border-border/50 hover:border-accent/70 transition-colors"
                       alt=""
                     />
                   </a>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import type { ToolCell, GameType, RoleGroup } from "../types";
 import { getMaturityTier } from "../utils/maturity";
+import ConfirmModal from "./ConfirmModal";
 import {
   useCreateToolCell,
   useUpdateToolCell,
@@ -39,6 +40,7 @@ export default function ToolCellModal({
   const deleteIconMut = useDeleteIcon();
 
   const [isNa, setIsNa] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [form, setForm] = useState({
     tool_name: cell?.tool_name ?? "",
@@ -125,9 +127,16 @@ export default function ToolCellModal({
     handleAnimatedClose();
   };
 
-  const handleDelete = async () => {
-    if (cell && confirm("确定要删除这个工具卡片吗？")) {
+  const handleDelete = () => {
+    if (cell) {
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (cell) {
       await deleteMutation.mutateAsync(cell.id);
+      setShowDeleteConfirm(false);
       handleAnimatedClose();
     }
   };
@@ -300,6 +309,15 @@ export default function ToolCellModal({
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="删除工具卡片"
+          message={`确定要删除「${cell?.tool_name}」吗？此操作无法撤销。`}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>,
     document.body
   );

@@ -11,6 +11,7 @@ import {
   useSortRoles,
 } from "../hooks/useRoles";
 import type { RoleGroup, Role } from "../types";
+import ConfirmModal from "../components/ConfirmModal";
 import {
   DndContext,
   closestCenter,
@@ -125,6 +126,7 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(group.name);
   const [newRoleName, setNewRoleName] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSave = async () => {
     if (!editName.trim()) return;
@@ -132,9 +134,14 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
     setEditing(false);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     try {
       await deleteMut.mutateAsync(group.id);
+      setShowDeleteConfirm(false);
     } catch (err: unknown) {
       const detail = (
         err as {
@@ -142,6 +149,7 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
         }
       )?.response?.data?.detail;
       alert(detail?.message ?? "删除失败");
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -265,6 +273,15 @@ function SortableRoleGroupCard({ group }: { group: RoleGroup }) {
           </button>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="删除工种大类"
+          message={`确定要删除工种大类「${group.name}」及其下的所有子工种和数据吗？此操作无法撤销。`}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
@@ -282,6 +299,7 @@ function SortableRoleRow({ role }: { role: Role }) {
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(role.name);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSave = async () => {
     if (!editName.trim()) return;
@@ -289,9 +307,14 @@ function SortableRoleRow({ role }: { role: Role }) {
     setEditing(false);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     try {
       await deleteMut.mutateAsync(role.id);
+      setShowDeleteConfirm(false);
     } catch (err: unknown) {
       const detail = (
         err as {
@@ -299,6 +322,7 @@ function SortableRoleRow({ role }: { role: Role }) {
         }
       )?.response?.data?.detail;
       alert(detail?.message ?? "删除失败");
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -359,6 +383,15 @@ function SortableRoleRow({ role }: { role: Role }) {
             删除
           </button>
         </>
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="删除子工种"
+          message={`确定要删除工种「${role.name}」及其所有相关数据吗？此操作无法撤销。`}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   );

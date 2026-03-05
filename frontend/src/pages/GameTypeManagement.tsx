@@ -9,6 +9,7 @@ import {
   useDeletePoster,
 } from "../hooks/useGameTypes";
 import type { GameType } from "../types";
+import ConfirmModal from "../components/ConfirmModal";
 import {
   DndContext,
   closestCenter,
@@ -140,6 +141,7 @@ function SortableGameTypeCard({
   const [editExamples, setEditExamples] = useState<string[]>(
     gameType.examples ?? []
   );
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const resetForm = () => {
     setEditName(gameType.name);
@@ -163,9 +165,14 @@ function SortableGameTypeCard({
     onToggleExpand();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     try {
       await deleteMut.mutateAsync(gameType.id);
+      setShowDeleteConfirm(false);
     } catch (err: unknown) {
       const detail = (
         err as {
@@ -173,14 +180,33 @@ function SortableGameTypeCard({
         }
       )?.response?.data?.detail;
       alert(detail?.message ?? "删除失败");
+      setShowDeleteConfirm(false);
     }
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const currentCount = gameType.posters.length;
+      const availableSlots = 6 - currentCount;
+
+      if (availableSlots <= 0) {
+        alert("每个游戏类型最多只能上传 6 张海报");
+        return;
+      }
+
+      let filesToUpload = e.target.files;
+      if (filesToUpload.length > availableSlots) {
+        alert(`数量超出限制，已自动为您保留前 ${availableSlots} 张海报`);
+        const dt = new DataTransfer();
+        for (let i = 0; i < availableSlots; i++) {
+          dt.items.add(filesToUpload[i]);
+        }
+        filesToUpload = dt.files;
+      }
+
       await uploadMut.mutateAsync({
         gameTypeId: gameType.id,
-        files: e.target.files,
+        files: filesToUpload,
       });
     }
   };
@@ -278,7 +304,7 @@ function SortableGameTypeCard({
           </label>
 
           <div>
-            <span className="text-xs text-text-muted">类别示例</span>
+            <span className="text-xs text-text-muted">游戏示例</span>
             <TagInput
               tags={editExamples}
               onChange={setEditExamples}
@@ -289,10 +315,12 @@ function SortableGameTypeCard({
           {/* Posters section */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-text-muted">海报</span>
+              <span className="text-xs text-text-muted">海报 ({gameType.posters.length}/6)</span>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="text-xs text-accent hover:text-accent-hover transition-colors"
+                disabled={gameType.posters.length >= 6}
+                className="text-xs text-accent hover:text-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title={gameType.posters.length >= 6 ? "海报数量已达上限" : ""}
               >
                 上传海报
               </button>
@@ -300,10 +328,10 @@ function SortableGameTypeCard({
             {gameType.posters.length > 0 ? (
               <div className="flex gap-2 flex-wrap">
                 {gameType.posters.map((p) => (
-                  <div key={p.id} className="relative group">
+                  <div key={p.id} className="relative group w-20">
                     <img
                       src={p.file_path}
-                      className="w-16 h-16 object-cover rounded border border-border"
+                      className="w-full aspect-[3/4] object-cover rounded border border-border"
                       alt=""
                     />
                     <button
@@ -346,6 +374,15 @@ function SortableGameTypeCard({
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="删除游戏类型"
+          message={`确定要删除游戏类型「${gameType.name}」及其所有相关数据吗？此操作无法撤销。`}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
@@ -387,12 +424,12 @@ function TagInput({
       {tags.map((tag, i) => (
         <span
           key={`${tag}-${i}`}
-          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
+          className="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm rounded-full bg-bg-elevated text-text-secondary border border-border shadow-sm"
         >
           {tag}
           <button
             onClick={() => removeTag(i)}
-            className="hover:text-red-400 transition-colors leading-none text-sm"
+            className="hover:text-red-400 transition-colors leading-none text-sm text-text-muted"
           >
             &times;
           </button>
