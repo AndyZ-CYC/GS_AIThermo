@@ -8,6 +8,7 @@ import {
   useDeleteToolCell,
   useUploadIcon,
   useDeleteIcon,
+  useToolCells
 } from "../hooks/useToolCells";
 
 interface Props {
@@ -47,6 +48,24 @@ export default function ToolCellModal({
     report_url: cell?.report_url ?? "",
   });
 
+  const { data: allCells = [] } = useToolCells();
+  const effectiveGtId = cell?.game_type_id ?? gameTypeId;
+  const effectiveRoleId = cell?.role_id ?? roleId;
+
+  // Find other tools in the same role (excluding current cell if editing)
+  const siblingCells = allCells.filter(
+    (c) =>
+      c.role_id === effectiveRoleId &&
+      (!cell || c.id !== cell.id) &&
+      !c.is_na &&
+      c.tool_name
+  );
+
+  // Group by tool name to avoid duplicates
+  const uniqueSiblingTools = Array.from(
+    new Map(siblingCells.map((c) => [c.tool_name, c])).values()
+  );
+
   useEffect(() => {
     if (cell && mode === "edit") {
       if (cell.is_na) {
@@ -70,8 +89,6 @@ export default function ToolCellModal({
     }
   }, [cell, mode]);
 
-  const effectiveGtId = cell?.game_type_id ?? gameTypeId;
-  const effectiveRoleId = cell?.role_id ?? roleId;
   const gtName = gameTypes.find((g) => g.id === effectiveGtId)?.name ?? "";
   const allRoles = roleGroups.flatMap((rg) => rg.roles);
   const roleName = allRoles.find((r) => r.id === effectiveRoleId)?.name ?? "";
@@ -193,7 +210,15 @@ export default function ToolCellModal({
               {mode === "create" && (
                 <NaToggle isNa={isNa} onChange={setIsNa} />
               )}
-              {!isNa && <EditForm form={form} setForm={setForm} tier={tier} />}
+              {!isNa && (
+                <EditForm
+                  form={form}
+                  setForm={setForm}
+                  tier={tier}
+                  mode={mode}
+                  quickAddOptions={uniqueSiblingTools}
+                />
+              )}
             </>
           )}
           <input
@@ -436,6 +461,8 @@ function EditForm({
   form,
   setForm,
   tier,
+  mode,
+  quickAddOptions,
 }: {
   form: {
     tool_name: string;
@@ -446,6 +473,8 @@ function EditForm({
   };
   setForm: React.Dispatch<React.SetStateAction<typeof form>>;
   tier: ReturnType<typeof getMaturityTier>;
+  mode?: "view" | "create" | "edit";
+  quickAddOptions?: ToolCell[];
 }) {
   const upd = (field: string, value: string | number) =>
     setForm((f) => ({ ...f, [field]: value }));
@@ -453,67 +482,107 @@ function EditForm({
   const inputCls =
     "mt-0.5 w-full bg-bg-surface border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:ring-2 focus:ring-accent/40 focus:border-accent/60 outline-none transition-colors";
 
-  return (
-    <div className="space-y-3">
-      <label className="block">
-        <span className="text-xs text-text-muted">工具名称 *</span>
-        <input
-          className={inputCls}
-          value={form.tool_name}
-          onChange={(e) => upd("tool_name", e.target.value)}
-        />
-      </label>
+  const handleQuickAdd = (sourceCell: ToolCell) => {
+    setForm((f) => ({
+      ...f,
+      tool_name: sourceCell.tool_name || "",
+      official_url: sourceCell.official_url || "",
+      short_desc: sourceCell.short_desc || "",
+      maturity_score: sourceCell.maturity_score || 50,
+      report_url: sourceCell.report_url || "",
+    }));
+  };
 
-      <label className="block">
-        <span className="text-xs text-text-muted">
-          成熟度分数 *：{form.maturity_score}
-        </span>
-        <div className="flex items-center gap-3 mt-1">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={form.maturity_score}
-            onChange={(e) => upd("maturity_score", Number(e.target.value))}
-            className="flex-1 transition-colors duration-300"
-            style={{ accentColor: `${tier.color}cc` }}
-          />
-          <div className="flex items-center gap-1.5">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />
-            <span className="text-sm font-medium text-text-primary">{tier.label}</span>
+  return (
+    <div className="space-y-4">
+      {mode === "create" && quickAddOptions && quickAddOptions.length > 0 && (
+        <div className="bg-bg-surface/50 p-3 rounded-lg border border-border/50 mb-2">
+          <span className="text-xs text-text-muted mb-2 block">快速添加已有工具：</span>
+          <div className="flex flex-wrap gap-2">
+            {quickAddOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => handleQuickAdd(opt)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-bg-elevated border border-border hover:border-accent/50 hover:bg-bg-surface transition-colors focus:outline-none focus:ring-1 focus:ring-accent/50"
+                type="button"
+                title="点击填充此工具信息"
+              >
+                {opt.icon_path && (
+                  <img src={opt.icon_path} className="w-3.5 h-3.5 rounded-sm object-cover" alt="" />
+                )}
+                <span className="text-text-primary truncate max-w-[120px]">
+                  {opt.tool_name}
+                </span>
+                <svg className="w-3 h-3 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            ))}
           </div>
         </div>
-      </label>
+      )}
 
-      <label className="block">
-        <span className="text-xs text-text-muted">官网链接 *</span>
-        <input
-          className={inputCls}
-          value={form.official_url}
-          onChange={(e) => upd("official_url", e.target.value)}
-          placeholder="https://..."
-        />
-      </label>
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-xs text-text-muted">工具名称 *</span>
+          <input
+            className={inputCls}
+            value={form.tool_name}
+            onChange={(e) => upd("tool_name", e.target.value)}
+          />
+        </label>
 
-      <label className="block">
-        <span className="text-xs text-text-muted">简短描述 *</span>
-        <textarea
-          className={`${inputCls} resize-none`}
-          rows={3}
-          value={form.short_desc}
-          onChange={(e) => upd("short_desc", e.target.value)}
-        />
-      </label>
+        <label className="block">
+          <span className="text-xs text-text-muted">
+            成熟度分数 *：{form.maturity_score}
+          </span>
+          <div className="flex items-center gap-3 mt-1">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={form.maturity_score}
+              onChange={(e) => upd("maturity_score", Number(e.target.value))}
+              className="flex-1 transition-colors duration-300"
+              style={{ accentColor: `${tier.color}cc` }}
+            />
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />
+              <span className="text-sm font-medium text-text-primary">{tier.label}</span>
+            </div>
+          </div>
+        </label>
 
-      <label className="block">
-        <span className="text-xs text-text-muted">报告链接（可选）</span>
-        <input
-          className={inputCls}
-          value={form.report_url}
-          onChange={(e) => upd("report_url", e.target.value)}
-          placeholder="https://..."
-        />
-      </label>
+        <label className="block">
+          <span className="text-xs text-text-muted">官网链接 *</span>
+          <input
+            className={inputCls}
+            value={form.official_url}
+            onChange={(e) => upd("official_url", e.target.value)}
+            placeholder="https://..."
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs text-text-muted">简短描述 *</span>
+          <textarea
+            className={`${inputCls} resize-none`}
+            rows={3}
+            value={form.short_desc}
+            onChange={(e) => upd("short_desc", e.target.value)}
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs text-text-muted">报告链接（可选）</span>
+          <input
+            className={inputCls}
+            value={form.report_url}
+            onChange={(e) => upd("report_url", e.target.value)}
+            placeholder="https://..."
+          />
+        </label>
+      </div>
     </div>
   );
 }

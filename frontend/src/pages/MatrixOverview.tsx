@@ -143,7 +143,7 @@ function MaturityLegend() {
 
 function GameTypeHeader({ gameType }: { gameType: GameType }) {
   const hasPosters = gameType.posters.length > 0;
-  const hasExtra = !!(gameType.description || (gameType.examples?.length ?? 0) > 0);
+  const hasExtra = !!(gameType.description || (gameType.examples?.length ?? 0) > 0 || hasPosters);
 
   const [showPopover, setShowPopover] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -199,7 +199,7 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
 
         {showPopover && hasExtra && (
           <div
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-56 border border-border rounded-lg p-3 space-y-2 animate-fade-in"
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-64 border border-border rounded-lg p-3 space-y-3 animate-fade-in"
             style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.6)", backgroundColor: "#2a2a30" }}
             onMouseEnter={() => { clearTimeout(timerRef.current); }}
             onMouseLeave={handleLeave}
@@ -216,6 +216,27 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
                   >
                     {ex}
                   </span>
+                ))}
+              </div>
+            )}
+            {hasPosters && (
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/50">
+                <span className="col-span-2 text-[10px] text-text-muted mb-0.5">相关游戏海报：</span>
+                {gameType.posters.map((p) => (
+                  <a
+                    key={p.id}
+                    href={p.file_path}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block hover:opacity-90 transition-opacity"
+                    title="点击查看大图"
+                  >
+                    <img
+                      src={p.file_path}
+                      className="w-full h-24 rounded object-cover border border-border/50 hover:border-accent/70 transition-colors"
+                      alt=""
+                    />
+                  </a>
                 ))}
               </div>
             )}
