@@ -81,9 +81,7 @@ export default function MatrixOverview() {
           {/* Header row — sticky top */}
           <div className="sticky top-0 left-0 z-30 bg-bg-base" />
           {gameTypes.map((gt) => (
-            <div key={gt.id} className="sticky top-0 z-20 bg-bg-base pt-1 pb-1">
-              <GameTypeHeader gameType={gt} />
-            </div>
+            <GameTypeHeader key={gt.id} gameType={gt} />
           ))}
 
           {/* Data rows by group */}
@@ -165,63 +163,65 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
 
   return (
     <div
-      className={`relative flex flex-col items-center gap-2 px-2 py-4 rounded-lg bg-bg-surface/60 transition-all duration-200 ${
-        hasPosters ? "justify-between" : "justify-center"
-      } ${hasExtra ? "cursor-pointer hover:scale-[1.03] hover:bg-bg-surface" : ""}`}
-      style={{
-        ...(showPopover ? { zIndex: 35, boxShadow: "0 4px 16px rgba(0,0,0,0.3)" } : {}),
-      }}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
+      className="sticky top-0 bg-bg-base pt-1 pb-1"
+      style={{ zIndex: showPopover ? 35 : 20 }}
     >
-      <span className="text-base font-medium text-text-primary text-center leading-tight">
-        {gameType.name}
-      </span>
-      {hasExtra && (
-        <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
-      )}
-      {hasPosters && (
-        <div className="flex justify-center -space-x-2">
-          {gameType.posters.slice(0, 3).map((p) => (
-            <img
-              key={p.id}
-              src={p.file_path}
-              className="w-12 h-12 rounded-md object-cover border border-border"
-              alt=""
-            />
-          ))}
-          {gameType.posters.length > 3 && (
-            <span className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
-              +{gameType.posters.length - 3}
-            </span>
-          )}
-        </div>
-      )}
+      <div
+        className={`relative flex flex-col items-center gap-2 px-2 py-4 rounded-lg bg-bg-surface/60 transition-all duration-200 h-full ${hasPosters ? "justify-between" : "justify-center"
+          } ${hasExtra ? "cursor-pointer hover:scale-[1.03] hover:bg-bg-surface" : ""}`}
+        style={showPopover ? { boxShadow: "0 4px 16px rgba(0,0,0,0.3)" } : undefined}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+      >
+        <span className="text-base font-medium text-text-primary text-center leading-tight">
+          {gameType.name}
+        </span>
+        {hasExtra && (
+          <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+        )}
+        {hasPosters && (
+          <div className="flex justify-center -space-x-2">
+            {gameType.posters.slice(0, 3).map((p) => (
+              <img
+                key={p.id}
+                src={p.file_path}
+                className="w-12 h-12 rounded-md object-cover border border-border"
+                alt=""
+              />
+            ))}
+            {gameType.posters.length > 3 && (
+              <span className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
+                +{gameType.posters.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
-      {showPopover && hasExtra && (
-        <div
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-56 border border-border rounded-lg p-3 space-y-2 animate-fade-in"
-          style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.6)", backgroundColor: "#2a2a30" }}
-          onMouseEnter={() => { clearTimeout(timerRef.current); }}
-          onMouseLeave={handleLeave}
-        >
-          {gameType.description && (
-            <p className="text-xs text-text-secondary leading-relaxed">{gameType.description}</p>
-          )}
-          {(gameType.examples?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {gameType.examples.map((ex) => (
-                <span
-                  key={ex}
-                  className="inline-block px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
-                >
-                  {ex}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        {showPopover && hasExtra && (
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-56 border border-border rounded-lg p-3 space-y-2 animate-fade-in"
+            style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.6)", backgroundColor: "#2a2a30" }}
+            onMouseEnter={() => { clearTimeout(timerRef.current); }}
+            onMouseLeave={handleLeave}
+          >
+            {gameType.description && (
+              <p className="text-xs text-text-secondary leading-relaxed">{gameType.description}</p>
+            )}
+            {(gameType.examples?.length ?? 0) > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {gameType.examples.map((ex) => (
+                  <span
+                    key={ex}
+                    className="inline-block px-2 py-0.5 text-xs rounded-full bg-accent/15 text-accent border border-accent/20"
+                  >
+                    {ex}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -404,7 +404,7 @@ function CellCard({
         className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
         style={{ backgroundColor: tier.indicatorColor }}
       />
-      <div className="relative px-3 py-2.5 pl-4 flex items-center gap-2">
+      <div className="relative w-full h-full min-h-[56px] pl-4 pr-3 flex items-center justify-center gap-2">
         {cell.icon_path ? (
           <img
             src={cell.icon_path}

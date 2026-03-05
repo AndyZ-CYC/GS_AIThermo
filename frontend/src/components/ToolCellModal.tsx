@@ -147,15 +147,13 @@ export default function ToolCellModal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"
+        }`}
       onClick={handleAnimatedClose}
     >
       <div
-        className={`bg-bg-elevated rounded-xl w-full max-w-lg mx-4 overflow-hidden transition-all duration-200 ${
-          visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-        }`}
+        className={`bg-bg-elevated rounded-xl w-full max-w-lg mx-4 overflow-hidden transition-all duration-200 ${visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+          }`}
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -477,7 +475,8 @@ function EditForm({
             max={100}
             value={form.maturity_score}
             onChange={(e) => upd("maturity_score", Number(e.target.value))}
-            className="flex-1 accent-accent"
+            className="flex-1 transition-colors duration-300"
+            style={{ accentColor: `${tier.color}cc` }}
           />
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-4 rounded-full" style={{ backgroundColor: tier.color }} />

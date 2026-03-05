@@ -70,8 +70,6 @@ cd frontend && npm install && npm run dev
 
 ### 每次会话开始时
 1. 确认工作目录
-2. 阅读 `claude-progress.txt` 了解最新进度
-3. 检查 `git log` 了解最近提交
 
 ### 代码规范
 - 后端：Python 类型注解，Pydantic 模型验证
