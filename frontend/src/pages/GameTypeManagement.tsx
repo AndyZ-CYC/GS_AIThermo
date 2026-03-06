@@ -424,12 +424,12 @@ function TagInput({
       {tags.map((tag, i) => (
         <span
           key={`${tag}-${i}`}
-          className="inline-flex items-center gap-1 px-2.5 py-0.5 text-sm rounded-full bg-bg-elevated text-text-secondary border border-border shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-accent/[.13] text-text-secondary border border-accent/20 shadow-sm"
         >
           {tag}
           <button
             onClick={() => removeTag(i)}
-            className="hover:text-red-400 transition-colors leading-none text-sm text-text-muted"
+            className="hover:text-red-400 transition-colors leading-none text-base text-text-muted hover:text-red-400"
           >
             &times;
           </button>

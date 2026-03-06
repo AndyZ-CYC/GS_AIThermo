@@ -10,6 +10,7 @@ import {
   useDeleteRole,
   useSortRoles,
 } from "../hooks/useRoles";
+import { useToolCells } from "../hooks/useToolCells";
 import type { RoleGroup, Role } from "../types";
 import ConfirmModal from "../components/ConfirmModal";
 import {
@@ -296,10 +297,13 @@ function SortableRoleRow({ role }: { role: Role }) {
 
   const updateMut = useUpdateRole();
   const deleteMut = useDeleteRole();
+  const { data: allCells = [] } = useToolCells();
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(role.name);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isRoleEmpty = !allCells.some((c) => c.role_id === role.id);
 
   const handleSave = async () => {
     if (!editName.trim()) return;
@@ -308,7 +312,11 @@ function SortableRoleRow({ role }: { role: Role }) {
   };
 
   const handleDelete = () => {
-    setShowDeleteConfirm(true);
+    if (isRoleEmpty) {
+      confirmDelete();
+    } else {
+      setShowDeleteConfirm(true);
+    }
   };
 
   const confirmDelete = async () => {

@@ -199,29 +199,32 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
 
         {showPopover && hasExtra && (
           <div
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-64 border border-border rounded-lg p-3 space-y-3 animate-fade-in"
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-30 w-72 border border-border rounded-lg p-4 space-y-3.5 animate-fade-in"
             style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.6)", backgroundColor: "#2a2a30" }}
             onMouseEnter={() => { clearTimeout(timerRef.current); }}
             onMouseLeave={handleLeave}
           >
             {gameType.description && (
-              <p className="text-xs text-text-secondary leading-relaxed">{gameType.description}</p>
+              <p className="text-sm text-text-secondary leading-relaxed">{gameType.description}</p>
             )}
             {(gameType.examples?.length ?? 0) > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {gameType.examples.map((ex) => (
-                  <span
-                    key={ex}
-                    className="inline-block px-2 py-0.5 text-xs rounded-full bg-bg-surface text-text-secondary border border-border shadow-sm"
-                  >
-                    {ex}
-                  </span>
-                ))}
+              <div className="border-t border-border/50 pt-1">
+                <span className="block text-xs text-text-muted mb-1.5">游戏示例：</span>
+                <div className="flex flex-wrap gap-1">
+                  {gameType.examples.map((ex) => (
+                    <span
+                      key={ex}
+                      className="inline-block px-2.5 py-0.5 text-sm rounded-full bg-accent/[.13] text-text-secondary shadow-sm border border-accent/20"
+                    >
+                      {ex}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             {hasPosters && (
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/50">
-                <span className="col-span-2 text-[10px] text-text-muted mb-0.5">相关游戏海报：</span>
+                <span className="col-span-2 text-xs text-text-muted mb-0.5">相关游戏海报：</span>
                 {gameType.posters.map((p) => (
                   <a
                     key={p.id}
