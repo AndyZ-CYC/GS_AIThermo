@@ -7,11 +7,11 @@ export interface MaturityTier {
 }
 
 const tiers: MaturityTier[] = [
-  { level: 1, label: "低",   color: "#c0392b", cardBg: "rgba(192,57,43,0.22)",   indicatorColor: "#e74c3c" },
-  { level: 2, label: "较低", color: "#e67e22", cardBg: "rgba(230,126,34,0.22)",  indicatorColor: "#f39c12" },
-  { level: 3, label: "中",   color: "#f1c40f", cardBg: "rgba(241,196,15,0.18)",  indicatorColor: "#f1c40f" },
-  { level: 4, label: "较高", color: "#7fb347", cardBg: "rgba(127,179,71,0.22)",  indicatorColor: "#8bc34a" },
-  { level: 5, label: "高",   color: "#27ae60", cardBg: "rgba(39,174,96,0.25)",   indicatorColor: "#2ecc71" },
+  { level: 1, label: "低", color: "#3b82f6", cardBg: "rgba(59,130,246,0.22)", indicatorColor: "#60a5fa" },
+  { level: 2, label: "较低", color: "#06b6d4", cardBg: "rgba(6,182,212,0.22)", indicatorColor: "#22d3ee" },
+  { level: 3, label: "中", color: "#eab308", cardBg: "rgba(234,179,8,0.18)", indicatorColor: "#facc15" },
+  { level: 4, label: "较高", color: "#f97316", cardBg: "rgba(249,115,22,0.22)", indicatorColor: "#fb923c" },
+  { level: 5, label: "高", color: "#ef4444", cardBg: "rgba(239,68,68,0.25)", indicatorColor: "#f87171" },
 ];
 
 export const allTiers = tiers;

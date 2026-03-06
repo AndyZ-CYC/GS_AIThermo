@@ -180,18 +180,22 @@ function GameTypeHeader({ gameType }: { gameType: GameType }) {
           <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
         )}
         {hasPosters && (
-          <div className="flex justify-center -space-x-2">
-            {gameType.posters.slice(0, 3).map((p) => (
+          <div className="flex justify-center -space-x-4 ml-2">
+            {gameType.posters.slice(0, 4).map((p, idx) => (
               <img
                 key={p.id}
                 src={p.file_path}
-                className="w-12 h-16 rounded-md object-cover border border-border"
+                className="w-12 h-16 rounded-md object-cover border border-border shadow-md relative"
+                style={{ zIndex: 10 - idx }}
                 alt=""
               />
             ))}
-            {gameType.posters.length > 3 && (
-              <span className="w-12 h-16 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border">
-                +{gameType.posters.length - 3}
+            {gameType.posters.length > 4 && (
+              <span
+                className="w-12 h-16 rounded-md bg-bg-elevated flex items-center justify-center text-xs text-text-muted border border-border shadow-md relative"
+                style={{ zIndex: 5 }}
+              >
+                +{gameType.posters.length - 4}
               </span>
             )}
           </div>

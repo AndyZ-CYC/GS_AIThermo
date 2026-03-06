@@ -16,9 +16,12 @@ export default function App() {
     <div className="min-h-screen">
       <nav className="border-b border-border bg-bg-surface/80 backdrop-blur-sm sticky top-0 z-40">
         <div className={`mx-auto px-6 flex items-center h-14 gap-8 transition-all duration-300 ${location.pathname === "/" && isWideMode ? 'max-w-none' : 'max-w-[1600px]'}`}>
-          <span className="font-semibold text-lg text-text-primary tracking-wide mr-2">
-            AI 行业温度计
-          </span>
+          <div className="flex items-center gap-3 mr-2">
+            <img src="/icon.png" alt="Logo" className="w-8 h-8 object-contain" />
+            <span className="font-semibold text-lg text-text-primary tracking-wide">
+              AI 行业温度计
+            </span>
+          </div>
           {navItems.map((n) => {
             const active = location.pathname === n.path;
             return (
@@ -26,8 +29,8 @@ export default function App() {
                 key={n.path}
                 to={n.path}
                 className={`relative text-base tracking-wider py-4 transition-colors duration-200 ${active
-                    ? "text-text-primary font-medium"
-                    : "text-text-secondary hover:text-text-primary"
+                  ? "text-text-primary font-medium"
+                  : "text-text-secondary hover:text-text-primary"
                   }`}
               >
                 {n.label}
